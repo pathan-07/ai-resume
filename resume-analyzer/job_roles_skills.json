@@ -1,0 +1,97 @@
+{
+  "Data Scientist": [
+    "Python", "R", "SQL", "Machine Learning", "Deep Learning", 
+    "TensorFlow", "PyTorch", "Scikit-learn", "Pandas", "NumPy", 
+    "Data Visualization", "Statistics", "A/B Testing", 
+    "Big Data", "Data Mining", "Natural Language Processing"
+  ],
+  "Frontend Developer": [
+    "HTML", "CSS", "JavaScript", "TypeScript", "React", 
+    "Angular", "Vue.js", "Redux", "SASS", "LESS", 
+    "Responsive Design", "Web Accessibility", "UI/UX", 
+    "Webpack", "Jest", "Cypress"
+  ],
+  "Backend Developer": [
+    "Node.js", "Python", "Java", "C#", "Ruby", "PHP", 
+    "Express", "Django", "Spring Boot", "ASP.NET", 
+    "RESTful APIs", "GraphQL", "Databases", "SQL", "NoSQL", 
+    "MongoDB", "PostgreSQL", "Redis", "Microservices"
+  ],
+  "UI/UX Designer": [
+    "User Research", "Wireframing", "Prototyping", 
+    "UI Design", "Figma", "Sketch", "Adobe XD", 
+    "Usability Testing", "Information Architecture", 
+    "User Flows", "Personas", "Journey Mapping", 
+    "Design Systems", "Accessibility", "Typography", 
+    "Visual Design"
+  ],
+  "Software Engineer": [
+    "Python", "JavaScript", "Java", "C++", "SQL", "Git", 
+    "Docker", "Kubernetes", "CI/CD", "AWS", "Azure", 
+    "Agile", "Scrum", "Data Structures", "Algorithms", 
+    "REST API", "Microservices", "Unit Testing"
+  ],
+  "DevOps Engineer": [
+    "Linux", "Shell Scripting", "AWS", "Azure", "GCP", 
+    "Docker", "Kubernetes", "Terraform", "Ansible", "Jenkins", 
+    "GitLab CI", "GitHub Actions", "Monitoring", "Prometheus", 
+    "Grafana", "ELK Stack", "Infrastructure as Code"
+  ],
+  "Product Manager": [
+    "Product Strategy", "Roadmapping", "User Research", 
+    "User Stories", "Agile", "Scrum", "Kanban", "JIRA", 
+    "Market Analysis", "Competitive Analysis", "A/B Testing", 
+    "Product Metrics", "Data Analysis", "Stakeholder Management", 
+    "Wireframing", "Prototyping"
+  ],
+  "Digital Marketer": [
+    "SEO", "SEM", "PPC", "Google Ads", "Facebook Ads", 
+    "Social Media Marketing", "Content Marketing", "Email Marketing", 
+    "Analytics", "Google Analytics", "A/B Testing", "CRO", 
+    "Marketing Automation", "HubSpot", "Mailchimp", "WordPress"
+  ],
+  "AI Engineer": [
+    "Machine Learning", "Deep Learning", "Neural Networks", 
+    "Generative AI", "LLMs", "TensorFlow", "PyTorch", 
+    "Transformer Models", "Computer Vision", "NLP", 
+    "MLOps", "AI Ethics", "Python", "Feature Engineering", 
+    "Vector Databases", "Model Optimization", "Prompt Engineering"
+  ],
+  "Cloud Engineer": [
+    "AWS", "Azure", "GCP", "Multi-cloud", "Kubernetes", 
+    "Docker", "Terraform", "Infrastructure as Code", "CloudFormation", 
+    "Serverless", "Lambda", "Cloud Security", "API Gateway", 
+    "Container Orchestration", "Service Mesh", "Cloud Cost Optimization"
+  ],
+  "Security Engineer": [
+    "DevSecOps", "Penetration Testing", "SAST/DAST", 
+    "Zero Trust Architecture", "Cloud Security", "IAM", 
+    "Threat Modeling", "Security Automation", "SIEM", 
+    "Container Security", "Application Security", "Encryption", 
+    "Compliance", "Vulnerability Management", "Security Frameworks"
+  ],
+  "Blockchain Developer": [
+    "Solidity", "Smart Contracts", "Web3.js", "Ethereum", 
+    "Consensus Algorithms", "DApps", "Tokenomics", "Cryptography", 
+    "Hardhat", "Truffle", "Metamask", "IPFS", "zkProofs", 
+    "DeFi", "DAO Development", "NFT Development"
+  ],
+  "Full Stack Developer": [
+    "JavaScript", "TypeScript", "React", "Node.js", "Express", 
+    "MongoDB", "PostgreSQL", "GraphQL", "REST APIs", "Redux", 
+    "Next.js", "Responsive Design", "Authentication", "Deployment", 
+    "Testing", "CI/CD", "Docker", "Cloud Services"
+  ],
+  "AR/VR Developer": [
+    "Unity", "Unreal Engine", "WebXR", "ARKit", "ARCore", 
+    "3D Modeling", "Spatial Computing", "C#", "C++", 
+    "React Native", "Three.js", "WebGL", "UX for AR/VR", 
+    "Haptic Feedback", "3D Animation", "Gesture Recognition"
+  ],
+  "IoT Engineer": [
+    "IoT Protocols", "MQTT", "CoAP", "Embedded Systems", 
+    "Sensor Networks", "Edge Computing", "Arduino", "Raspberry Pi", 
+    "Python", "C/C++", "IoT Security", "5G", "Cloud Integration", 
+    "Firmware Development", "Hardware Interfaces", "Data Processing"
+  ]
+}

@@ -1,0 +1,329 @@
+/* Main styles for Resume Analyzer */
+body {
+    font-family: 'Poppins', sans-serif;
+    background-color: #f8f9fa;
+    color: #333;
+}
+
+.header-section {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 15px;
+    padding: 30px;
+    margin-bottom: 30px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+    animation: fadeIn 0.6s ease-out;
+}
+
+.card {
+    border: none;
+    border-radius: 15px;
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.08);
+    margin-bottom: 30px;
+    transition: transform 0.3s, box-shadow 0.3s;
+    animation: fadeIn 0.6s ease-out;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 25px rgba(0, 0, 0, 0.12);
+}
+
+.navbar {
+    box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
+}
+
+.navbar-brand {
+    font-weight: 600;
+    font-size: 1.4rem;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    padding: 12px 25px;
+    font-weight: 500;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(102, 126, 234, 0.5);
+}
+
+.form-control {
+    border-radius: 10px;
+    padding: 12px 15px;
+    border: 1px solid #e0e0e0;
+}
+
+.form-control:focus {
+    border-color: #764ba2;
+    box-shadow: 0 0 0 0.25rem rgba(118, 75, 162, 0.25);
+}
+
+.file-upload-wrapper {
+    position: relative;
+    border-radius: 10px;
+    overflow: hidden;
+    border: 2px dashed #764ba2;
+    padding: 20px;
+    text-align: center;
+    background-color: rgba(118, 75, 162, 0.05);
+    transition: all 0.3s;
+}
+
+.file-upload-wrapper:hover {
+    background-color: rgba(118, 75, 162, 0.1);
+}
+
+.upload-icon {
+    font-size: 2.5rem;
+    color: #764ba2;
+    margin-bottom: 10px;
+}
+
+.custom-file-input {
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    width: 100%;
+    cursor: pointer;
+    opacity: 0;
+}
+
+.analysis-result {
+    background-color: white;
+    border-radius: 15px;
+    padding: 25px;
+    white-space: pre-wrap;
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.08);
+}
+
+.section-title {
+    position: relative;
+    padding-left: 15px;
+    margin-bottom: 20px;
+}
+
+.section-title:before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    width: 5px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 10px;
+}
+
+.footer {
+    font-size: 0.9rem;
+    color: #6c757d;
+    text-align: center;
+    margin-top: 50px;
+    padding-bottom: 20px;
+}
+
+/* Analysis content styling */
+.analysis-content {
+    line-height: 1.6;
+}
+
+.analysis-content h5 {
+    color: #5a3a8a;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 8px;
+    margin-top: 25px;
+}
+
+.analysis-content p {
+    margin-bottom: 15px;
+}
+
+/* Style for the score badges */
+.badge.bg-primary {
+    font-size: 1.1rem;
+    padding: 8px 12px;
+    margin-left: 5px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+}
+
+/* Loading animation */
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(255, 255, 255, 0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    visibility: hidden;
+    opacity: 0;
+    transition: all 0.3s;
+}
+
+.loading-overlay.active {
+    visibility: visible;
+    opacity: 1;
+}
+
+.loading-spinner {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    border: 8px solid #f3f3f3;
+    border-top: 8px solid #764ba2;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideIn {
+    from { opacity: 0; transform: translateX(-20px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .header-section {
+        padding: 20px;
+    }
+    
+    .btn-primary {
+        width: 100%;
+    }
+}
+
+/* Print styles */
+@media print {
+    .header-section, 
+    form, 
+    .footer {
+        display: none;
+    }
+    
+    .card {
+        box-shadow: none !important;
+        margin: 0 !important;
+    }
+    
+    .analysis-result {
+        padding: 0 !important;
+    }
+}
+
+/* Footer styling */
+footer {
+    background-color: #f8f9fa;
+    border-top: 1px solid #e9ecef;
+    padding: 20px 0;
+    margin-top: 50px;
+}
+
+/* Modal styling */
+.modal-content {
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+}
+
+.modal-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.modal.fade .modal-dialog {
+    transition: transform 0.3s ease-out;
+}
+
+.modal.show .modal-dialog {
+    transform: none;
+}
+
+/* Button group styling */
+.btn-group .btn {
+    border-radius: 8px;
+    margin: 0 2px;
+}
+
+.btn-outline-success:hover {
+    background: linear-gradient(135deg, #28a745, #20c997);
+    border-color: transparent;
+}
+
+.btn-outline-primary:hover {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    border-color: transparent;
+}
+
+.btn-info {
+    background: linear-gradient(135deg, #17a2b8, #0097e6);
+    border: none;
+}
+
+.btn-info:hover {
+    background: linear-gradient(135deg, #0097e6, #17a2b8);
+    transform: translateY(-2px);
+}
+
+/* Statistics cards */
+.stats-card {
+    border-radius: 15px;
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.08);
+    padding: 20px;
+    transition: all 0.3s ease;
+}
+
+.stats-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
+}
+
+.stats-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    margin-bottom: 15px;
+}
+
+/* Empty state styling */
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+}
+
+.empty-state i {
+    font-size: 5rem;
+    color: #d1d1d1;
+    margin-bottom: 20px;
+    animation: pulse 2s infinite;
+}
+
+.empty-state h4 {
+    margin-bottom: 15px;
+    color: #555;
+}

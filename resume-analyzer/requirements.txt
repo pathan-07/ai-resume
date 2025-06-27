@@ -1,0 +1,9 @@
+flask
+python-dotenv
+python-docx
+PyPDF2
+google-generativeai
+markupsafe
+xhtml2pdf
+flask-login
+flask-sqlalchemy

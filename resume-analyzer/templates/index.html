@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">    
+    <title>Resume Analyzer</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <!-- Inline styles removed - now using the external style.css file -->    <!-- Inline styles removed - now using the external style.css file -->
+</head>
+<body>
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="text-center">
+            <div class="loading-spinner mb-3"></div>
+            <h4 class="text-primary">Analyzing your resume...</h4>
+            <p class="text-muted">This may take a few moments</p>
+        </div>
+    </div>
+    
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-4">
+        <div class="container">
+            <a class="navbar-brand" href="{{ url_for('index') }}">Resume Analyzer</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="{{ url_for('index') }}">Analyze</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('dashboard') }}">Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('logout') }}">Logout</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    
+    <div class="container py-5">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        
+        <div class="header-section">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h1 class="display-5 fw-bold"><i class="fas fa-brain me-3"></i>Resume Analyzer</h1>
+                    <p class="lead">Leverage AI to analyze your resume and get personalized feedback for your dream job</p>
+                </div>
+                <div class="col-md-4 d-none d-md-block text-end">
+                    <i class="fas fa-chart-line" style="font-size: 5rem; opacity: 0.8;"></i>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-body p-4">
+                <h4 class="section-title mb-4">Submit Your Resume</h4>
+                <form method="POST" action="{{ url_for('analyze') }}" enctype="multipart/form-data">
+                    <div class="mb-4">
+                        <label for="job_role" class="form-label fw-medium">Target Job Role</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-briefcase"></i></span>
+                            <input type="text" name="job_role" class="form-control" placeholder="e.g. Data Scientist, Software Engineer, Product Manager" required>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="email" class="form-label fw-medium">Email for Report</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-envelope"></i></span>
+                            <input type="email" name="email" class="form-control" placeholder="Where to send the analysis report (optional)" value="{{ session.get('user_email', '') }}">
+                        </div>
+                        <small class="form-text text-muted">We'll send the analysis report to this email address</small>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="form-label fw-medium">Upload Resume</label>
+                        <div class="file-upload-wrapper">
+                            <div class="upload-icon">
+                                <i class="fas fa-file-pdf"></i>
+                            </div>
+                            <h5>Drop your resume here or click to browse</h5>
+                            <p class="text-muted">Accepted format: PDF only</p>
+                            <input type="file" name="resume" class="custom-file-input" accept=".pdf" required>
+                        </div>
+                    </div>
+                    
+                    <div class="text-center">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="fas fa-magic me-2"></i>Analyze My Resume
+                        </button>
+                    </div>
+                    
+                    <div id="loading-spinner" class="text-center mt-3" style="display: none;">
+                        <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+                            <span class="visually-hidden">Analyzing...</span>
+                        </div>
+                        <p class="mt-2 fw-bold">Analyzing your resume...</p>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        {% if result %}
+        <div class="card">
+            <div class="card-body p-4">
+                <h4 class="section-title">
+                    Analysis Results for: <span class="text-primary">{{ job_role }}</span>
+                </h4>                <div class="analysis-result mt-4">
+                    {{ result | safe }}
+                </div>
+                <div class="text-center mt-4">
+                    <a href="/download-pdf" class="btn btn-outline-success me-2">
+                        <i class="fas fa-file-pdf me-2"></i>Download Analysis as PDF
+                    </a>
+                    <a href="/email-result" class="btn btn-outline-primary">
+                        <i class="fas fa-envelope me-2"></i>Email Analysis
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        
+        <div class="footer">
+            <p>© 2025 Resume Analyzer | Powered by Gemini AI</p>
+        </div>
+    </div>    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Display filename when selected
+        document.querySelector('input[type="file"]').addEventListener('change', function(e) {
+            if (e.target.files.length > 0) {
+                const parent = e.target.closest('.file-upload-wrapper');
+                const iconEl = parent.querySelector('.upload-icon i');
+                const titleEl = parent.querySelector('h5');
+                
+                iconEl.className = 'fas fa-check-circle';
+                titleEl.textContent = e.target.files[0].name;
+                parent.style.borderColor = '#28a745';
+            }
+        });
+        
+        // Show loading overlay and spinner when form is submitted
+        document.querySelector('form').addEventListener('submit', function() {
+            document.getElementById('loadingOverlay').classList.add('active');
+            const spinner = document.getElementById('loading-spinner');
+            const submitBtn = document.querySelector('button[type="submit"]');
+            
+            if (spinner) {
+                spinner.style.display = 'block';
+            }
+            if (submitBtn) {
+                submitBtn.style.display = 'none';
+            }
+        });
+        
+        // Add tooltip initialization
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl)
+        });
+    </script>
+
+</body>
+</html>
