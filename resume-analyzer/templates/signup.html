@@ -1,22 +1,23 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sign Up - Resume Analyzer</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-    <div class="container my-5">
-        <div class="row justify-content-center">
-            <div class="col-md-6">
-                <div class="card shadow">
-                    <div class="card-header bg-primary text-white text-center">
-                        <h3 class="mb-0">Create Account</h3>
+    <div class="container" style="padding-top: 4rem;">
+        <div style="display: flex; justify-content: center;">
+            <div style="width: 100%; max-width: 400px;">
+                <div class="card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-user-plus"></i> Create Account</h3>
                     </div>
-                    <div class="card-body p-4">
+                    <div class="card-body">
                         {% with messages = get_flashed_messages(with_categories=true) %}
                             {% if messages %}
                                 {% for category, message in messages %}
@@ -30,31 +31,39 @@
                         {% endif %}
                         
                         <form method="POST" action="{{ url_for('signup') }}">
-                            <div class="mb-3">
+                            <div class="form-group">
                                 <label for="name" class="form-label">Full Name</label>
-                                <input type="text" class="form-control" id="name" name="name" required>
+                                <div class="input-group">
+                                    <i class="fas fa-user input-group-icon"></i>
+                                    <input type="text" class="form-control" id="name" name="name" required>
+                                </div>
                             </div>
-                            <div class="mb-3">
+                            <div class="form-group">
                                 <label for="email" class="form-label">Email Address</label>
-                                <input type="email" class="form-control" id="email" name="email" required>
+                                <div class="input-group">
+                                    <i class="fas fa-envelope input-group-icon"></i>
+                                    <input type="email" class="form-control" id="email" name="email" required>
+                                </div>
                             </div>
-                            <div class="mb-4">
+                            <div class="form-group">
                                 <label for="password" class="form-label">Password</label>
-                                <input type="password" class="form-control" id="password" name="password" required>
+                                <div class="input-group">
+                                    <i class="fas fa-lock input-group-icon"></i>
+                                    <input type="password" class="form-control" id="password" name="password" required>
+                                </div>
                             </div>
-                            <div class="d-grid">
-                                <button type="submit" class="btn btn-primary btn-lg">Sign Up</button>
-                            </div>
+                            <button type="submit" class="btn btn-primary btn-lg btn-block">
+                                <i class="fas fa-user-plus"></i>
+                                Sign Up
+                            </button>
                         </form>
                     </div>
-                    <div class="card-footer text-center">
-                        <p class="mb-0">Already have an account? <a href="{{ url_for('login') }}">Login</a></p>
+                    <div class="card-footer">
+                        <p>Already have an account? <a href="{{ url_for('login') }}" style="color: var(--primary-color); text-decoration: none; font-weight: 600;">Login</a></p>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

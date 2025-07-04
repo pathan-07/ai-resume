@@ -3,151 +3,61 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Welcome to Resume Analyzer</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <title>Welcome - Resume Analyzer</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <style>
-        body {
-            background: linear-gradient(135deg, #8e44ad, #3498db);
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-        }
-        .welcome-card {
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 15px;
-            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
-            overflow: hidden;
-            max-width: 800px;
-            width: 100%;
-        }
-        .welcome-header {
-            background: #6a3093;
-            background: linear-gradient(to right, #6a3093, #a044ff);
-            padding: 30px;
-            color: white;
-            text-align: center;
-        }
-        .welcome-icon {
-            font-size: 4rem;
-            margin-bottom: 15px;
-            color: rgba(255, 255, 255, 0.9);
-        }
-        .welcome-body {
-            padding: 40px;
-        }
-        .feature-item {
-            display: flex;
-            align-items: flex-start;
-            margin-bottom: 25px;
-        }
-        .feature-icon {
-            background: linear-gradient(135deg, #a044ff, #6a3093);
-            color: white;
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-right: 20px;
-            flex-shrink: 0;
-        }
-        .auth-buttons {
-            display: flex;
-            gap: 15px;
-            margin-top: 30px;
-        }
-        .btn-signup {
-            background: linear-gradient(to right, #6a3093, #a044ff);
-            border: none;
-            color: white;
-            padding: 12px 30px;
-            font-weight: 600;
-        }
-        .btn-login {
-            background: white;
-            border: 2px solid #6a3093;
-            color: #6a3093;
-            padding: 12px 30px;
-            font-weight: 600;
-        }
-    </style>
 </head>
 <body>
-    <div class="container py-5">
-        <div class="welcome-card">
-            <div class="welcome-header">
-                <div class="welcome-icon">
-                    <i class="fas fa-file-alt"></i>
+    <div class="container" style="min-height: 100vh; display: flex; align-items: center; justify-content: center;">
+        <div class="text-center" style="max-width: 600px;">
+            <div class="header-section" style="margin-bottom: 2rem;">
+                <div class="header-content">
+                    <h1><i class="fas fa-brain"></i> Resume Analyzer</h1>
+                    <p>Leverage AI to analyze your resume and get personalized feedback for your dream job</p>
                 </div>
-                <h1 class="display-5 fw-bold">Resume Analyzer</h1>
-                <p class="lead">Boost your job search with AI-powered resume analysis</p>
             </div>
-            
-            <div class="welcome-body">
-                {% with messages = get_flashed_messages(with_categories=true) %}
-                    {% if messages %}
-                        {% for category, message in messages %}
-                            <div class="alert alert-{{ category }}">{{ message }}</div>
-                        {% endfor %}
-                    {% endif %}
-                {% endwith %}
-                
-                <h3 class="mb-4">Unlock your career potential with our AI-powered resume analyzer</h3>
-                
-                <div class="feature-item">
-                    <div class="feature-icon">
-                        <i class="fas fa-check"></i>
-                    </div>
-                    <div>
-                        <h5>Personalized Analysis</h5>
-                        <p>Get tailored feedback specific to your target job role and industry standards.</p>
+
+            <div class="card">
+                <div class="card-body text-center" style="padding: 3rem 2rem;">
+                    <h2 style="margin-bottom: 1rem; color: var(--text-primary);">Get Started Today</h2>
+                    <p style="color: var(--text-secondary); margin-bottom: 2rem; font-size: 1.125rem;">
+                        Create an account or login to start analyzing your resume with AI-powered insights.
+                    </p>
+
+                    <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+                        <a href="{{ url_for('signup') }}" class="btn btn-primary btn-lg">
+                            <i class="fas fa-user-plus"></i>
+                            Create Account
+                        </a>
+                        <a href="{{ url_for('login') }}" class="btn btn-outline btn-lg">
+                            <i class="fas fa-sign-in-alt"></i>
+                            Login
+                        </a>
                     </div>
                 </div>
-                
-                <div class="feature-item">
-                    <div class="feature-icon">
-                        <i class="fas fa-chart-line"></i>
-                    </div>
-                    <div>
-                        <h5>Detailed Scoring</h5>
-                        <p>Receive comprehensive scoring across key areas to identify strengths and improvement opportunities.</p>
-                    </div>
+            </div>
+
+            <div style="margin-top: 2rem; display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem;">
+                <div style="padding: 1.5rem; background: var(--background); border-radius: var(--radius); box-shadow: var(--shadow-sm);">
+                    <i class="fas fa-magic" style="font-size: 2rem; color: var(--primary-color); margin-bottom: 1rem;"></i>
+                    <h4 style="margin-bottom: 0.5rem;">AI-Powered Analysis</h4>
+                    <p style="color: var(--text-secondary); font-size: 0.95rem;">Get intelligent insights and recommendations powered by advanced AI technology.</p>
                 </div>
-                
-                <div class="feature-item">
-                    <div class="feature-icon">
-                        <i class="fas fa-download"></i>
-                    </div>
-                    <div>
-                        <h5>PDF Reports</h5>
-                        <p>Download professional PDF reports of your resume analysis for future reference.</p>
-                    </div>
+
+                <div style="padding: 1.5rem; background: var(--background); border-radius: var(--radius); box-shadow: var(--shadow-sm);">
+                    <i class="fas fa-chart-line" style="font-size: 2rem; color: var(--accent-color); margin-bottom: 1rem;"></i>
+                    <h4 style="margin-bottom: 0.5rem;">Detailed Reports</h4>
+                    <p style="color: var(--text-secondary); font-size: 0.95rem;">Receive comprehensive analysis reports with actionable feedback.</p>
                 </div>
-                
-                <div class="feature-item">
-                    <div class="feature-icon">
-                        <i class="fas fa-history"></i>
-                    </div>
-                    <div>
-                        <h5>Analysis History</h5>
-                        <p>Save and track your resume improvements over time with our dashboard.</p>
-                    </div>
-                </div>
-                
-                <div class="auth-buttons">
-                    <a href="{{ url_for('signup') }}" class="btn btn-signup btn-lg">Create Account</a>
-                    <a href="{{ url_for('login') }}" class="btn btn-login btn-lg">Login</a>
+
+                <div style="padding: 1.5rem; background: var(--background); border-radius: var(--radius); box-shadow: var(--shadow-sm);">
+                    <i class="fas fa-envelope" style="font-size: 2rem; color: var(--warning-color); margin-bottom: 1rem;"></i>
+                    <h4 style="margin-bottom: 0.5rem;">Email Integration</h4>
+                    <p style="color: var(--text-secondary); font-size: 0.95rem;">Get your analysis results delivered directly to your inbox.</p>
                 </div>
             </div>
         </div>
     </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
