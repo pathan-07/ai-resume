@@ -353,5 +353,86 @@ def analyze_page():
         return redirect(url_for("login"))
     return render_template("index.html")
 
+@app.route("/build-resume", methods=["GET", "POST"])
+def build_resume():
+    if "user_id" not in session:
+        flash("Please log in first.", "warning")
+        return redirect(url_for("login"))
+    
+    if request.method == "GET":
+        return render_template("build_resume.html")
+    
+    if request.method == "POST":
+        # Get form data
+        resume_data = {
+            'name': request.form.get('name', ''),
+            'email': request.form.get('email', ''),
+            'phone': request.form.get('phone', ''),
+            'job_role': request.form.get('job_role', ''),
+            'skills': request.form.get('skills', '').split(',') if request.form.get('skills') else [],
+            'education': request.form.get('education', ''),
+            'experience': request.form.get('experience', ''),
+            'certifications': request.form.get('certifications', ''),
+            'achievements': request.form.get('achievements', '')
+        }
+        
+        # Clean up skills list
+        resume_data['skills'] = [skill.strip() for skill in resume_data['skills'] if skill.strip()]
+        
+        # Store in session for PDF generation
+        session['generated_resume'] = resume_data
+        
+        return render_template("resume_result.html", resume_data=resume_data)
+
+@app.route("/download-resume-pdf")
+def download_resume_pdf():
+    if "user_id" not in session:
+        flash("Please log in first.", "warning")
+        return redirect(url_for("login"))
+    
+    if "generated_resume" not in session:
+        flash("No resume data available to download.", "warning")
+        return redirect(url_for("build_resume"))
+    
+    try:
+        from weasyprint import HTML, CSS
+        from weasyprint.text.fonts import FontConfiguration
+        
+        # Generate HTML for PDF
+        html_content = render_template("resume_pdf.html", resume_data=session["generated_resume"])
+        
+        # Create PDF
+        font_config = FontConfiguration()
+        html = HTML(string=html_content)
+        css = CSS(string="""
+            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+            body { font-family: 'Inter', sans-serif; margin: 0; padding: 20px; }
+            .resume-container { max-width: 800px; margin: 0 auto; }
+            .header { background: linear-gradient(135deg, #6366f1, #8b5cf6); color: white; padding: 2rem; border-radius: 16px; margin-bottom: 2rem; }
+            .section { background: white; padding: 1.5rem; margin-bottom: 1rem; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
+            .section h3 { color: #6366f1; font-weight: 600; margin-bottom: 1rem; }
+            .skills-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 0.5rem; }
+            .skill-tag { background: #f0f9ff; color: #0369a1; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.875rem; text-align: center; }
+        """, font_config=font_config)
+        
+        pdf = html.write_pdf(stylesheets=[css])
+        
+        pdf_io = io.BytesIO(pdf)
+        pdf_io.seek(0)
+        
+        return send_file(
+            pdf_io,
+            as_attachment=True,
+            download_name=f"{session['generated_resume'].get('name', 'Resume').replace(' ', '_')}_Resume.pdf",
+            mimetype="application/pdf"
+        )
+        
+    except ImportError:
+        flash("WeasyPrint is not installed. Please install it to generate PDFs.", "danger")
+        return redirect(url_for("build_resume"))
+    except Exception as e:
+        flash(f"Error generating PDF: {str(e)}", "danger")
+        return redirect(url_for("build_resume"))
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)
