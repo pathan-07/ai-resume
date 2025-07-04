@@ -60,6 +60,12 @@ def generate_pdf(html):
 # Formatting functions
 def format_for_web(text):
     """Format text for better web display with enhanced structure"""
+    if not text:
+        return '<div class="analysis-content"><p>No analysis data available.</p></div>'
+    
+    # First, clean up the text
+    text = text.strip()
+    
     # Convert markdown-style headers with icons
     text = re.sub(r'\*\*(.*?Analysis.*?)\*\*', r'<h5><i class="fas fa-chart-line"></i> \1</h5>', text, flags=re.IGNORECASE)
     text = re.sub(r'\*\*(.*?Score.*?)\*\*', r'<h5><i class="fas fa-star"></i> \1</h5>', text, flags=re.IGNORECASE)
@@ -67,47 +73,53 @@ def format_for_web(text):
     text = re.sub(r'\*\*(.*?Experience.*?)\*\*', r'<h5><i class="fas fa-briefcase"></i> \1</h5>', text, flags=re.IGNORECASE)
     text = re.sub(r'\*\*(.*?Recommendation.*?)\*\*', r'<h5><i class="fas fa-lightbulb"></i> \1</h5>', text, flags=re.IGNORECASE)
     text = re.sub(r'\*\*(.*?Summary.*?)\*\*', r'<h5><i class="fas fa-file-alt"></i> \1</h5>', text, flags=re.IGNORECASE)
+    text = re.sub(r'\*\*(.*?Missing.*?)\*\*', r'<h5><i class="fas fa-exclamation-triangle"></i> \1</h5>', text, flags=re.IGNORECASE)
+    text = re.sub(r'\*\*(.*?Improve.*?)\*\*', r'<h5><i class="fas fa-arrow-up"></i> \1</h5>', text, flags=re.IGNORECASE)
     text = re.sub(r'\*\*(.*?)\*\*', r'<h5><i class="fas fa-info-circle"></i> \1</h5>', text)
-    text = re.sub(r'\*(.*?)\*', r'<em>\1</em>', text)
+    text = re.sub(r'\*(.*?)\*', r'<strong>\1</strong>', text)
 
     # Convert bullet points and format content
     lines = text.split('\n')
     formatted_lines = []
-    current_section = []
+    in_section = False
 
     for line in lines:
         line = line.strip()
+        if not line:
+            if in_section:
+                formatted_lines.append('</div>')
+                in_section = False
+            continue
+            
         if line.startswith('<h5>'):
-            # Process previous section
-            if current_section:
-                formatted_lines.append('<div class="highlight-box">')
-                formatted_lines.extend(current_section)
+            if in_section:
                 formatted_lines.append('</div>')
-                current_section = []
             formatted_lines.append(line)
-        elif line.startswith('•') or line.startswith('-'):
-            current_section.append(f'<div class="info-box" style="padding-left: 3rem;">• {line[1:].strip()}</div>')
-        elif line.startswith('Score:') or line.startswith('Rating:') or 'score' in line.lower():
+            formatted_lines.append('<div class="highlight-box">')
+            in_section = True
+        elif line.startswith('•') or line.startswith('-') or line.startswith('*'):
+            bullet_content = line[1:].strip()
+            if 'score' in bullet_content.lower() or 'rating' in bullet_content.lower():
+                formatted_lines.append(f'<div class="score-box"><i class="fas fa-trophy"></i> {bullet_content}</div>')
+            else:
+                formatted_lines.append(f'<div class="info-box">• {bullet_content}</div>')
+        elif re.match(r'^\d+\.', line):
+            # Numbered list
+            formatted_lines.append(f'<div class="info-box">{line}</div>')
+        elif 'score:' in line.lower() or 'rating:' in line.lower() or re.search(r'\d+/\d+', line):
             formatted_lines.append(f'<div class="score-box"><i class="fas fa-trophy"></i> {line}</div>')
-        elif 'recommend' in line.lower() or 'suggest' in line.lower():
-            current_section.append(f'<div class="warning-box" style="padding-left: 3rem;">{line}</div>')
-        elif line:
-            current_section.append(f'<p>{line}</p>')
         else:
-            if current_section:
+            if not in_section:
                 formatted_lines.append('<div class="highlight-box">')
-                formatted_lines.extend(current_section)
-                formatted_lines.append('</div>')
-                current_section = []
-            formatted_lines.append('<br>')
+                in_section = True
+            formatted_lines.append(f'<p>{line}</p>')
 
-    # Process any remaining section
-    if current_section:
-        formatted_lines.append('<div class="highlight-box">')
-        formatted_lines.extend(current_section)
+    # Close any remaining section
+    if in_section:
         formatted_lines.append('</div>')
 
-    return '<div class="analysis-content">' + '\n'.join(formatted_lines) + '</div>'
+    result = '<div class="analysis-content">' + '\n'.join(formatted_lines) + '</div>'
+    return result
 
 # DB helpers
 def get_user(email):

@@ -134,12 +134,59 @@
             const modal = document.getElementById('analysisModal');
             const content = document.getElementById('analysisContent');
             
-            content.innerHTML = analysisContent.replace(/\\n/g, '<br>');
+            // Properly decode and format the content
+            let decodedContent = analysisContent
+                .replace(/\\n/g, '\n')
+                .replace(/\\"/g, '"')
+                .replace(/\\\\/g, '\\');
+            
+            // Apply formatting similar to the format_for_web function
+            decodedContent = formatAnalysisForModal(decodedContent);
+            content.innerHTML = decodedContent;
             modal.classList.add('show');
             
             // Update email button href with the correct analysis ID
             const analysisId = event.target.closest('tr').getAttribute('data-analysis-id');
             document.getElementById('modalEmailBtn').href = `/email-analysis/${analysisId}`;
+        }
+
+        function formatAnalysisForModal(text) {
+            if (!text) return '<p>No analysis data available.</p>';
+            
+            // Convert markdown-style headers
+            text = text.replace(/\*\*(.*?)\*\*/g, '<h5><i class="fas fa-info-circle"></i> $1</h5>');
+            text = text.replace(/\*(.*?)\*/g, '<strong>$1</strong>');
+            
+            // Process line by line
+            const lines = text.split('\n');
+            let formatted = [];
+            let inSection = false;
+            
+            for (let line of lines) {
+                line = line.trim();
+                if (!line) continue;
+                
+                if (line.startsWith('<h5>')) {
+                    if (inSection) formatted.push('</div>');
+                    formatted.push(line);
+                    formatted.push('<div class="highlight-box">');
+                    inSection = true;
+                } else if (line.startsWith('•') || line.startsWith('-') || line.startsWith('*')) {
+                    formatted.push(`<div class="info-box">• ${line.substring(1).trim()}</div>`);
+                } else if (line.toLowerCase().includes('score') || /\d+\/\d+/.test(line)) {
+                    formatted.push(`<div class="score-box"><i class="fas fa-trophy"></i> ${line}</div>`);
+                } else {
+                    if (!inSection) {
+                        formatted.push('<div class="highlight-box">');
+                        inSection = true;
+                    }
+                    formatted.push(`<p>${line}</p>`);
+                }
+            }
+            
+            if (inSection) formatted.push('</div>');
+            
+            return formatted.join('\n');
         }
 
         function closeModal() {

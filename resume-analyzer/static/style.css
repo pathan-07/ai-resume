@@ -507,14 +507,29 @@ body {
     box-shadow: var(--shadow-sm);
 }
 
+/* CSS Variables */
+:root {
+    --primary-color: #6366f1;
+    --primary-hover: #4f46e5;
+    --accent-color: #10b981;
+    --warning-color: #f59e0b;
+    --text-light: #9ca3af;
+    --text-secondary: #6b7280;
+    --surface: #f9fafb;
+    --background: #ffffff;
+    --border-color: #e5e7eb;
+    --radius: 0.5rem;
+    --radius-lg: 1rem;
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
 .analysis-content h5 {
-    color: var(--primary-color);
+    color: white;
     font-size: 1.25rem;
     font-weight: 700;
     margin: 2rem 0 1rem 0;
     padding: 1rem;
     background: linear-gradient(135deg, var(--primary-color), var(--primary-hover));
-    color: white;
     border-radius: var(--radius);
     display: flex;
     align-items: center;
