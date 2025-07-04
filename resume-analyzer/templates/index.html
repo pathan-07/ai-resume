@@ -96,10 +96,7 @@
                         </button>
                     </div>
                     
-                    <div id="loading-spinner" class="text-center mt-4" style="display: none;">
-                        <div class="loading-spinner" style="margin: 0 auto;"></div>
-                        <p class="mt-2" style="font-weight: 600;">Analyzing your resume...</p>
-                    </div>
+                    
                 </form>
             </div>
         </div>
@@ -177,17 +174,29 @@
         });
         
         // Show loading overlay when form is submitted
-        document.querySelector('form').addEventListener('submit', function() {
+        document.querySelector('form').addEventListener('submit', function(e) {
+            const formData = new FormData(e.target);
+            const fileInput = formData.get('resume');
+            const jobRole = formData.get('job_role');
+            
+            // Validate required fields
+            if (!fileInput || !fileInput.name || !jobRole.trim()) {
+                return; // Let browser handle validation
+            }
+            
+            // Show loading overlay
             document.getElementById('loadingOverlay').classList.add('active');
-            const spinner = document.getElementById('loading-spinner');
             const submitBtn = document.querySelector('button[type="submit"]');
             
-            if (spinner) {
-                spinner.style.display = 'block';
-            }
             if (submitBtn) {
-                submitBtn.style.display = 'none';
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Analyzing...';
             }
+        });
+
+        // Hide loading overlay when page loads (in case of redirect back)
+        window.addEventListener('load', function() {
+            document.getElementById('loadingOverlay').classList.remove('active');
         });
 
         // Close alerts
