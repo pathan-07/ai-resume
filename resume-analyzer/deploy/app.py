@@ -12,7 +12,9 @@ from analysis import analyze_resume
 from ai_resume_generator import generate_ai_resume
 
 # App and Config
-app = Flask(__name__)
+app = Flask(__name__, 
+            template_folder='templates',
+            static_folder='static')
 app.config['SECRET_KEY'] = os.getenv("SECRET_KEY", "a-very-secure-and-random-string-that-is-hard-to-guess")
 app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///{os.path.join(app.instance_path, 'resume_ai.db')}"
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
