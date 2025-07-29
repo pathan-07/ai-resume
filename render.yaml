@@ -4,12 +4,10 @@ services:
     env: python
     plan: free
     
-    # We put the command directly here, instead of using a shell script.
-    # This command tells pip where to find your requirements file.
+    # Per the docs, this is a common build command for Python
     buildCommand: "pip install -r resume-analyzer/requirements.txt"
     
-    # This is the correct command to start your app.
-    # It tells Gunicorn to look inside the 'resume-analyzer' folder for 'app.py'
+    # This start command follows the format from the docs for your folder structure
     startCommand: "gunicorn resume-analyzer.app:app"
     
     envVars:
