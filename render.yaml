@@ -5,14 +5,16 @@ services:
     plan: free
     rootDir: resume-analyzer/deploy
     
-    # Build command - install dependencies from root requirements.txt
+    # Build command - install dependencies
     buildCommand: "pip install -r ../../requirements.txt"
     
-    # Start command - run gunicorn from deploy directory with correct syntax
-    startCommand: "gunicorn app:app --bind 0.0.0.0:$PORT"
+    # Start command - use Flask directly since gunicorn path issues
+    startCommand: "python app.py"
     
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.4
       - key: SECRET_KEY
         generateValue: true
+      - key: FLASK_ENV
+        value: production
