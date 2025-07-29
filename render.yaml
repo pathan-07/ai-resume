@@ -8,8 +8,8 @@ services:
     # Build command - install dependencies from root requirements.txt
     buildCommand: "pip install -r ../../requirements.txt"
     
-    # Start command - run gunicorn from deploy directory
-    startCommand: "gunicorn app:app --host 0.0.0.0 --port $PORT"
+    # Start command - run gunicorn from deploy directory with correct syntax
+    startCommand: "gunicorn app:app --bind 0.0.0.0:$PORT"
     
     envVars:
       - key: PYTHON_VERSION
