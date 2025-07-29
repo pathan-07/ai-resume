@@ -4,14 +4,14 @@ services:
     env: python
     plan: free
     
-    # Build command ab yahin define hai
+    # Build command stays the same, it needs the full path
     buildCommand: "pip install -r resume-analyzer/requirements.txt"
     
-    # Sahi Start Command jo aapke folder structure ke liye hai
-    startCommand: "gunicorn resume-analyzer.app:app"
+    # Start command now matches what Render wants by default
+    startCommand: "gunicorn app:app"
     
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.4
       - key: SECRET_KEY
-        generateValue: true # Render apne aap secure key bana lega
+        generateValue: true
