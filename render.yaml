@@ -3,12 +3,13 @@ services:
     name: resume-analyzer
     env: python
     plan: free
+    rootDir: resume-analyzer/deploy
     
-    # Build command stays the same, it needs the full path
-    buildCommand: "pip install -r resume-analyzer/requirements.txt"
+    # Build command - install dependencies from root requirements.txt
+    buildCommand: "pip install -r ../../requirements.txt"
     
-    # Start command now matches what Render wants by default
-    startCommand: "gunicorn app:app"
+    # Start command - run from deploy directory
+    startCommand: "gunicorn app:app --bind 0.0.0.0:$PORT"
     
     envVars:
       - key: PYTHON_VERSION
