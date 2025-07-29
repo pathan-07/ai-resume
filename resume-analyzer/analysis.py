@@ -1,34 +1,59 @@
 import google.generativeai as genai
 import os
 from dotenv import load_dotenv
-import sys
 
+# Load environment variables
 load_dotenv()
-api_key = os.getenv("GOOGLE_API_KEY")
-if not api_key:
-    raise ValueError("GOOGLE_API_KEY environment variable is required")
-genai.configure(api_key=api_key)
 
-model = genai.GenerativeModel('gemini-1.5-flash')  # or use gemini-pro if preferred
+def initialize_genai():
+    """Initializes the Google Generative AI model."""
+    api_key = os.getenv("GOOGLE_API_KEY")
+    if not api_key:
+        print("GOOGLE_API_KEY environment variable is not set.")
+        return None
+    try:
+        genai.configure(api_key=api_key)
+        return genai.GenerativeModel('gemini-1.5-flash')
+    except Exception as e:
+        print(f"Error initializing Google Generative AI: {e}")
+        return None
+
+# Initialize the model once when the application starts
+model = initialize_genai()
 
 def analyze_resume(resume_text, job_role):
+    """
+    Analyzes a resume against a job role using the Gemini AI.
+    """
+    if not model:
+        return "Error: AI model is not initialized. Please check your API key."
+
     prompt = f"""
-You are a senior HR reviewer and career coach at a top technology firm.
+    As a senior HR reviewer and career coach at a top technology firm, please provide a professional analysis of the following resume for the job role of "{job_role}".
 
-Please review the following resume for the job role of "{job_role}".
-Write your response as a real HR would write feedback to a junior candidate.
+    Your response should be structured as a real HR professional would provide feedback to a candidate.
 
-🔍 Include:
-1. A professional **Resume Score** (out of 100) based on relevance, skills, and structure.
-2. A clear list of **Missing or Weak Skills** relevant to this job.
-3. Specific **Suggestions to Improve**, focusing on clarity, professionalism, and job alignment.
+    **Resume Score:**
+    Provide a score out of 100, based on relevance, skills, structure, and overall presentation.
 
-📝 Resume:
-{resume_text}
+    **Strengths:**
+    Identify 2-3 key strengths of the resume that align with the target role.
 
-Make your tone professional, structured, and supportive — like real HR advice.
-Avoid generic comments. Base everything strictly on the resume provided.
-"""
+    **Areas for Improvement:**
+    List specific, actionable suggestions for what the candidate can do to improve their resume. Focus on clarity, professionalism, and alignment with the job description.
 
-    response = model.generate_content(prompt)
-    return response.text
+    **Missing Skills/Keywords:**
+    Based on the job role of "{job_role}", list any critical skills or keywords that are missing from the resume.
+
+    **Resume Text to Analyze:**
+    {resume_text}
+
+    Please provide a comprehensive and supportive analysis.
+    """
+
+    try:
+        response = model.generate_content(prompt)
+        return response.text
+    except Exception as e:
+        print(f"Error generating content from AI: {e}")
+        return f"An error occurred during AI analysis: {e}"

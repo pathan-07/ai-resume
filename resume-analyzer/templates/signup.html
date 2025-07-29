@@ -1,69 +1,28 @@
+{% extends "layout.html" %}
+{% block title %}Sign Up{% endblock %}
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sign Up - Resume Analyzer</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-</head>
-<body>
-    <div class="container" style="padding-top: 4rem;">
-        <div style="display: flex; justify-content: center;">
-            <div style="width: 100%; max-width: 400px;">
-                <div class="card">
-                    <div class="card-header">
-                        <h3><i class="fas fa-user-plus"></i> Create Account</h3>
-                    </div>
-                    <div class="card-body">
-                        {% with messages = get_flashed_messages(with_categories=true) %}
-                            {% if messages %}
-                                {% for category, message in messages %}
-                                    <div class="alert alert-{{ category }}">{{ message }}</div>
-                                {% endfor %}
-                            {% endif %}
-                        {% endwith %}
-                        
-                        {% if error %}
-                            <div class="alert alert-danger">{{ error }}</div>
-                        {% endif %}
-                        
-                        <form method="POST" action="{{ url_for('signup') }}">
-                            <div class="form-group">
-                                <label for="name" class="form-label">Full Name</label>
-                                <div class="input-group">
-                                    <i class="fas fa-user input-group-icon"></i>
-                                    <input type="text" class="form-control" id="name" name="name" required>
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <label for="email" class="form-label">Email Address</label>
-                                <div class="input-group">
-                                    <i class="fas fa-envelope input-group-icon"></i>
-                                    <input type="email" class="form-control" id="email" name="email" required>
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <label for="password" class="form-label">Password</label>
-                                <div class="input-group">
-                                    <i class="fas fa-lock input-group-icon"></i>
-                                    <input type="password" class="form-control" id="password" name="password" required>
-                                </div>
-                            </div>
-                            <button type="submit" class="btn btn-primary btn-lg btn-block">
-                                <i class="fas fa-user-plus"></i>
-                                Sign Up
-                            </button>
-                        </form>
-                    </div>
-                    <div class="card-footer">
-                        <p>Already have an account? <a href="{{ url_for('login') }}" style="color: var(--primary-color); text-decoration: none; font-weight: 600;">Login</a></p>
-                    </div>
-                </div>
+{% block content %}
+<div style="display: flex; align-items: center; justify-content: center; height: 100%;">
+    <div class="card" style="width: 100%; max-width: 400px;">
+        <h3 class="text-center mb-4" style="color: var(--primary-color);">Create an Account</h3>
+        <form method="POST" action="{{ url_for('signup') }}">
+            <div class="form-group">
+                <label for="name" class="form-label">Full Name</label>
+                <input type="text" class="form-control" id="name" name="name" required>
             </div>
-        </div>
+            <div class="form-group">
+                <label for="email" class="form-label">Email Address</label>
+                <input type="email" class="form-control" id="email" name="email" required>
+            </div>
+            <div class="form-group">
+                <label for="password" class="form-label">Password</label>
+                <input type="password" class="form-control" id="password" name="password" required>
+            </div>
+            <button type="submit" class="btn btn-primary btn-lg" style="width: 100%;">Sign Up</button>
+        </form>
+        <p class="text-center mt-4" style="color: var(--text-secondary);">
+            Already have an account? <a href="{{ url_for('login') }}" style="color: var(--primary-color);">Login</a>
+        </p>
     </div>
-</body>
-</html>
+</div>
+{% endblock %}

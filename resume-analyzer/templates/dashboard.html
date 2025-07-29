@@ -1,213 +1,72 @@
+{% extends "layout.html" %}
+{% block title %}Dashboard{% endblock %}
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - Resume Analyzer</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-</head>
-<body>
-    <nav class="navbar">
-        <div class="container">
-            <div class="nav-container">
-                <a class="navbar-brand" href="{{ url_for('index') }}">
-                    <i class="fas fa-brain"></i>
-                    Resume Analyzer
-                </a>
-                <button class="nav-toggle" onclick="toggleNav()">
-                    <i class="fas fa-bars"></i>
-                </button>
-                <ul class="nav-menu" id="navMenu">
-                    <li><a class="nav-link" href="{{ url_for('index') }}">Analyze</a></li>
-                    <li><a class="nav-link" href="{{ url_for('build_resume') }}">Build Resume</a></li>
-                    <li><a class="nav-link active" href="{{ url_for('dashboard') }}">Dashboard</a></li>
-                    <li><a class="nav-link" href="{{ url_for('logout') }}">Logout</a></li>
-                </ul>
+{% block content %}
+<div class="page-header">
+    <h1>Dashboard</h1>
+    <p>Welcome back, {{ session.user_name or 'User' }}! Here's your analysis history.</p>
+</div>
+
+{% if history %}
+    <div class="history-grid">
+        {% for analysis in history %}
+        <div class="history-card">
+            <div class="date">{{ analysis.created_at.strftime('%B %d, %Y') }}</div>
+            <h4>{{ analysis.job_role }}</h4>
+            <div class="mt-4 d-flex gap-2">
+                <button class="btn btn-primary btn-sm" onclick="showAnalysisModal('{{ analysis.result | tojson }}', '{{ analysis.id }}')">View</button>
+                <a href="{{ url_for('email_analysis', analysis_id=analysis.id) }}" class="btn btn-outline btn-sm">Email</a>
             </div>
         </div>
-    </nav>
-
-    <div class="container" style="padding-top: 2rem;">
-        <div class="header-section">
-            <div class="header-content">
-                <h1><i class="fas fa-chart-line"></i> Your Resume Analyses</h1>
-                <p>View and manage your resume analysis history</p>
-            </div>
-        </div>
-        
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                    <div class="alert alert-{{ category }}">
-                        {{ message }}
-                        <button onclick="this.parentElement.remove()" style="float: right; background: none; border: none; font-size: 1.2rem; cursor: pointer;">&times;</button>
-                    </div>
-                {% endfor %}
-            {% endif %}
-        {% endwith %}
-        
-        {% if history %}
-            <div class="card">
-                <div class="card-body p-0">
-                    <div class="table-responsive">
-                        <table class="table">
-                            <thead>
-                                <tr>
-                                    <th>Date</th>
-                                    <th>Job Role</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for analysis in history %}
-                                <tr data-analysis-id="{{ analysis.id }}">
-                                    <td>{{ analysis.created_at }}</td>
-                                    <td>{{ analysis.job_role }}</td>
-                                    <td>
-                                        <div class="d-flex gap-2">
-                                            <button class="btn btn-primary btn-sm view-analysis" 
-                                                    onclick="showAnalysis('{{ analysis.result | replace('\n', '\\n') | replace('"', '\\"') }}')"
-                                                    data-analysis="{{ analysis.result | replace('\n', '\\n') | replace('"', '\\"') }}">
-                                                <i class="fas fa-eye"></i> View
-                                            </button>
-                                            <a href="{{ url_for('email_analysis', analysis_id=analysis.id) }}" 
-                                               class="btn btn-outline btn-sm">
-                                                <i class="fas fa-envelope"></i> Email
-                                            </a>
-                                        </div>
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        {% else %}
-            <div class="card">
-                <div class="card-body text-center" style="padding: 4rem 2rem;">
-                    <i class="fas fa-file-alt" style="font-size: 4rem; color: var(--text-light); margin-bottom: 1rem;"></i>
-                    <h4 style="margin-bottom: 1rem; color: var(--text-secondary);">No analyses yet</h4>
-                    <p style="color: var(--text-secondary); margin-bottom: 2rem;">
-                        You haven't analyzed any resumes yet.
-                    </p>
-                    <a href="{{ url_for('index') }}" class="btn btn-primary">
-                        <i class="fas fa-plus"></i>
-                        Analyze Your First Resume
-                    </a>
-                </div>
-            </div>
-        {% endif %}
+        {% endfor %}
     </div>
+{% else %}
+    <div class="card text-center">
+        <h4>No analyses yet.</h4>
+        <p class="text-secondary">Start by analyzing your first resume.</p>
+        <a href="{{ url_for('analyze_page') }}" class="btn btn-primary mt-4">Analyze Resume</a>
+    </div>
+{% endif %}
+
+<!-- Modal -->
+<div class="modal" id="analysisModal">
+    <div class="modal-dialog">
+        <div class="modal-header">
+            <h5 class="modal-title">Resume Analysis</h5>
+            <button class="modal-close" onclick="closeModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div id="analysisContent" class="analysis-result"></div>
+        </div>
+        <div class="modal-footer">
+            <a href="#" id="modalEmailBtn" class="btn btn-primary">Email This Analysis</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const modal = document.getElementById('analysisModal');
+    const modalContent = document.getElementById('analysisContent');
+    const modalEmailBtn = document.getElementById('modalEmailBtn');
+
+    function showAnalysisModal(result, id) {
+        const analysisResult = JSON.parse(result);
+        modalContent.innerHTML = formatForWebJS(analysisResult);
+        modalEmailBtn.href = `/email-analysis/${id}`;
+        modal.classList.add('show');
+    }
+
+    function closeModal() {
+        modal.classList.remove('show');
+    }
     
-    <!-- Analysis Modal -->
-    <div class="modal" id="analysisModal">
-        <div class="modal-dialog">
-            <div class="modal-header">
-                <h5 class="modal-title">Resume Analysis</h5>
-                <button class="modal-close" onclick="closeModal()">&times;</button>
-            </div>
-            <div class="modal-body">
-                <div id="analysisContent" class="analysis-content"></div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-secondary" onclick="closeModal()">Close</button>
-                <a href="#" id="modalEmailBtn" class="btn btn-primary">
-                    <i class="fas fa-envelope"></i>
-                    Email This Analysis
-                </a>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        // Mobile navigation toggle
-        function toggleNav() {
-            const navMenu = document.getElementById('navMenu');
-            navMenu.classList.toggle('show');
-        }
-
-        // Modal functionality
-        function showAnalysis(analysisContent) {
-            const modal = document.getElementById('analysisModal');
-            const content = document.getElementById('analysisContent');
-            
-            // Properly decode and format the content
-            let decodedContent = analysisContent
-                .replace(/\\n/g, '\n')
-                .replace(/\\"/g, '"')
-                .replace(/\\\\/g, '\\');
-            
-            // Apply formatting similar to the format_for_web function
-            decodedContent = formatAnalysisForModal(decodedContent);
-            content.innerHTML = decodedContent;
-            modal.classList.add('show');
-            
-            // Update email button href with the correct analysis ID
-            const analysisId = event.target.closest('tr').getAttribute('data-analysis-id');
-            document.getElementById('modalEmailBtn').href = `/email-analysis/${analysisId}`;
-        }
-
-        function formatAnalysisForModal(text) {
-            if (!text) return '<p>No analysis data available.</p>';
-            
-            // Convert markdown-style headers
-            text = text.replace(/\*\*(.*?)\*\*/g, '<h5><i class="fas fa-info-circle"></i> $1</h5>');
-            text = text.replace(/\*(.*?)\*/g, '<strong>$1</strong>');
-            
-            // Process line by line
-            const lines = text.split('\n');
-            let formatted = [];
-            let inSection = false;
-            
-            for (let line of lines) {
-                line = line.trim();
-                if (!line) continue;
-                
-                if (line.startsWith('<h5>')) {
-                    if (inSection) formatted.push('</div>');
-                    formatted.push(line);
-                    formatted.push('<div class="highlight-box">');
-                    inSection = true;
-                } else if (line.startsWith('•') || line.startsWith('-') || line.startsWith('*')) {
-                    formatted.push(`<div class="info-box">• ${line.substring(1).trim()}</div>`);
-                } else if (line.toLowerCase().includes('score') || /\d+\/\d+/.test(line)) {
-                    formatted.push(`<div class="score-box"><i class="fas fa-trophy"></i> ${line}</div>`);
-                } else {
-                    if (!inSection) {
-                        formatted.push('<div class="highlight-box">');
-                        inSection = true;
-                    }
-                    formatted.push(`<p>${line}</p>`);
-                }
-            }
-            
-            if (inSection) formatted.push('</div>');
-            
-            return formatted.join('\n');
-        }
-
-        function closeModal() {
-            const modal = document.getElementById('analysisModal');
-            modal.classList.remove('show');
-        }
-
-        // Close modal when clicking outside
-        document.getElementById('analysisModal').addEventListener('click', function(e) {
-            if (e.target === this) {
-                closeModal();
-            }
-        });
-
-        // Close modal with escape key
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') {
-                closeModal();
-            }
-        });
-    </script>
-</body>
-</html>
+    function formatForWebJS(text) {
+        if (!text) return '<p>No analysis data available.</p>';
+        let html = text.replace(/\*\*(.*?)\*\*/g, '<h5>$1</h5>');
+        html = html.replace(/\*(.*?)\*/g, '<strong>$1</strong>');
+        return html.replace(/\n/g, '<br>');
+    }
+</script>
+{% endblock %}

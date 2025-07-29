@@ -1,33 +1,27 @@
-import sys
-import traceback
-
-print("Importing PyPDF2 in resume_parser.py...")
-try:
-    import PyPDF2
-    print("PyPDF2 imported successfully")
-except Exception as e:
-    print(f"Error importing PyPDF2: {str(e)}", file=sys.stderr)
-    traceback.print_exc()
-    raise
-
-# We'll skip docx import for now since it's causing issues
-print("NOTE: Skipping docx import - DOCX files will not be supported")
+import PyPDF2
+import docx
+import io
 
 def extract_text(file):
-    print(f"Extracting text from file: {file.filename}")
+    """
+    Extracts text from a file (PDF or DOCX).
+    """
+    filename = file.filename
     try:
-        if file.filename.endswith(".pdf"):
-            print("Processing PDF file...")
-            reader = PyPDF2.PdfReader(file)
+        if filename.endswith(".pdf"):
+            # For PDF files, we read the content into a BytesIO object
+            pdf_reader = PyPDF2.PdfReader(io.BytesIO(file.read()))
             text = ""
-            for page in reader.pages:
+            for page in pdf_reader.pages:
                 text += page.extract_text()
-            print(f"Successfully extracted {len(text)} characters from PDF")
+            return text
+        elif filename.endswith(".docx"):
+            # For DOCX files, we can directly read the file
+            doc = docx.Document(file)
+            text = "\n".join([paragraph.text for paragraph in doc.paragraphs])
             return text
         else:
-            print(f"Unsupported file type: {file.filename}")
-            return "Only PDF files are supported at this time."
+            return "Error: Unsupported file type. Please upload a PDF or DOCX file."
     except Exception as e:
-        print(f"Error extracting text: {str(e)}", file=sys.stderr)
-        traceback.print_exc()
-        return f"Error extracting text: {str(e)}"
+        print(f"Error extracting text from {filename}: {e}")
+        return f"Error processing file: {e}"

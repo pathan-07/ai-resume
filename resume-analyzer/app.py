@@ -1,193 +1,72 @@
 from flask import Flask, render_template, request, redirect, url_for, session, send_file, flash
-from markupsafe import Markup
-import sqlite3
-import os
-import traceback
-import io
-import re
-from dotenv import load_dotenv
-from datetime import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
+from datetime import datetime
+import os
+import io
+
+# Local Imports
+from models import db, User, ResumeAnalysis
+from utils import send_email, generate_pdf, format_for_web
 from resume_parser import extract_text
 from analysis import analyze_resume
-from xhtml2pdf import pisa
-from email.message import EmailMessage
-from email.utils import formataddr
-import smtplib
+from ai_resume_generator import generate_ai_resume
 
-# App and config
+# App and Config
 app = Flask(__name__)
-app.secret_key = os.getenv("SECRET_KEY", "your_super_secret_key")  # change to a secure random string
-load_dotenv()
+app.config['SECRET_KEY'] = os.getenv("SECRET_KEY", "a-very-secure-and-random-string-that-is-hard-to-guess")
+app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///{os.path.join(app.instance_path, 'resume_ai.db')}"
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-DB_PATH = "resume_ai.db"
+# Initialize extensions
+db.init_app(app)
 
-def get_db_connection():
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
-    return conn
+# --- Routes ---
 
-# Email function
-def send_email(receiver_email, subject, body, attachment=None):
-    sender_email = os.getenv("SENDER_EMAIL")
-    sender_password = os.getenv("SENDER_PASSWORD")
-
-    msg = EmailMessage()
-    msg['From'] = formataddr(("CareerGPT", sender_email))
-    msg['To'] = receiver_email
-    msg['Subject'] = subject
-    msg.set_content(body)
-
-    if attachment:
-        msg.add_attachment(attachment.getvalue(), maintype='application', subtype='pdf', filename="Resume_Report.pdf")
-
-    try:
-        with smtplib.SMTP_SSL("smtp.gmail.com", 465) as smtp:
-            smtp.login(sender_email, sender_password)
-            smtp.send_message(msg)
-        return True
-    except Exception as e:
-        print("Email error:", e)
-        return False
-
-# PDF generator
-def generate_pdf(html):
-    pdf = io.BytesIO()
-    pisa.CreatePDF(io.StringIO(html), dest=pdf, encoding='utf-8')
-    pdf.seek(0)
-    return pdf
-
-# Formatting functions
-def format_for_web(text):
-    """Format text for better web display with enhanced structure"""
-    if not text:
-        return '<div class="analysis-content"><p>No analysis data available.</p></div>'
-    
-    # First, clean up the text
-    text = text.strip()
-    
-    # Convert markdown-style headers with icons
-    text = re.sub(r'\*\*(.*?Analysis.*?)\*\*', r'<h5><i class="fas fa-chart-line"></i> \1</h5>', text, flags=re.IGNORECASE)
-    text = re.sub(r'\*\*(.*?Score.*?)\*\*', r'<h5><i class="fas fa-star"></i> \1</h5>', text, flags=re.IGNORECASE)
-    text = re.sub(r'\*\*(.*?Skills.*?)\*\*', r'<h5><i class="fas fa-code"></i> \1</h5>', text, flags=re.IGNORECASE)
-    text = re.sub(r'\*\*(.*?Experience.*?)\*\*', r'<h5><i class="fas fa-briefcase"></i> \1</h5>', text, flags=re.IGNORECASE)
-    text = re.sub(r'\*\*(.*?Recommendation.*?)\*\*', r'<h5><i class="fas fa-lightbulb"></i> \1</h5>', text, flags=re.IGNORECASE)
-    text = re.sub(r'\*\*(.*?Summary.*?)\*\*', r'<h5><i class="fas fa-file-alt"></i> \1</h5>', text, flags=re.IGNORECASE)
-    text = re.sub(r'\*\*(.*?Missing.*?)\*\*', r'<h5><i class="fas fa-exclamation-triangle"></i> \1</h5>', text, flags=re.IGNORECASE)
-    text = re.sub(r'\*\*(.*?Improve.*?)\*\*', r'<h5><i class="fas fa-arrow-up"></i> \1</h5>', text, flags=re.IGNORECASE)
-    text = re.sub(r'\*\*(.*?)\*\*', r'<h5><i class="fas fa-info-circle"></i> \1</h5>', text)
-    text = re.sub(r'\*(.*?)\*', r'<strong>\1</strong>', text)
-
-    # Convert bullet points and format content
-    lines = text.split('\n')
-    formatted_lines = []
-    in_section = False
-
-    for line in lines:
-        line = line.strip()
-        if not line:
-            if in_section:
-                formatted_lines.append('</div>')
-                in_section = False
-            continue
-            
-        if line.startswith('<h5>'):
-            if in_section:
-                formatted_lines.append('</div>')
-            formatted_lines.append(line)
-            formatted_lines.append('<div class="highlight-box">')
-            in_section = True
-        elif line.startswith('•') or line.startswith('-') or line.startswith('*'):
-            bullet_content = line[1:].strip()
-            if 'score' in bullet_content.lower() or 'rating' in bullet_content.lower():
-                formatted_lines.append(f'<div class="score-box"><i class="fas fa-trophy"></i> {bullet_content}</div>')
-            else:
-                formatted_lines.append(f'<div class="info-box">• {bullet_content}</div>')
-        elif re.match(r'^\d+\.', line):
-            # Numbered list
-            formatted_lines.append(f'<div class="info-box">{line}</div>')
-        elif 'score:' in line.lower() or 'rating:' in line.lower() or re.search(r'\d+/\d+', line):
-            formatted_lines.append(f'<div class="score-box"><i class="fas fa-trophy"></i> {line}</div>')
-        else:
-            if not in_section:
-                formatted_lines.append('<div class="highlight-box">')
-                in_section = True
-            formatted_lines.append(f'<p>{line}</p>')
-
-    # Close any remaining section
-    if in_section:
-        formatted_lines.append('</div>')
-
-    result = '<div class="analysis-content">' + '\n'.join(formatted_lines) + '</div>'
-    return result
-
-# DB helpers
-def get_user(email):
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM users WHERE email = ?", (email,))
-    user = cursor.fetchone()
-    conn.close()
-    return user
-
-def save_history(user_id, job_role, result):
-    conn = get_db_connection()
-    try:
-        conn.execute("INSERT INTO analysis_history (user_id, job_role, result) VALUES (?, ?, ?)", 
-                    (user_id, job_role, result))
-        conn.commit()
-    except Exception as e:
-        print(f"Error saving history: {e}")
-    finally:
-        conn.close()
-
-# Routes
 @app.route("/")
 def index():
-    # Redirect to login page if not logged in
     if "user_id" not in session:
-        return redirect(url_for('login'))
-    # If logged in, go to the analysis page
+        return render_template('welcome.html')
     return redirect(url_for('analyze_page'))
 
 @app.route("/signup", methods=["GET", "POST"])
 def signup():
     if request.method == "POST":
-        name = request.form["name"]
-        email = request.form["email"]
-        password = generate_password_hash(request.form["password"])
+        name = request.form.get("name")
+        email = request.form.get("email")
+        password = request.form.get("password")
 
-        conn = get_db_connection()
-        cursor = conn.cursor()
+        if not all([name, email, password]):
+            flash("All fields are required.", "danger")
+            return render_template("signup.html")
 
-        try:
-            cursor.execute("INSERT INTO users (name, email, password) VALUES (?, ?, ?)", (name, email, password))
-            conn.commit()
-            conn.close()
-            flash("Signup successful! Please log in.", "success")
-            return redirect(url_for("login"))
-        except sqlite3.IntegrityError:
-            conn.close()
+        if User.query.filter_by(email=email).first():
             flash("Email already exists.", "danger")
+            return render_template("signup.html")
+
+        new_user = User(
+            name=name,
+            email=email,
+            password=generate_password_hash(password, method='pbkdf2:sha256')
+        )
+        db.session.add(new_user)
+        db.session.commit()
+
+        flash("Signup successful! Please log in.", "success")
+        return redirect(url_for("login"))
 
     return render_template("signup.html")
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
-        email = request.form["email"]
-        password = request.form["password"]
+        email = request.form.get("email")
+        password = request.form.get("password")
+        user = User.query.filter_by(email=email).first()
 
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        cursor.execute("SELECT * FROM users WHERE email = ?", (email,))
-        user = cursor.fetchone()
-        conn.close()
-
-        if user and check_password_hash(user["password"], password):
-            session["user_id"] = user["id"]
-            session["user_name"] = user["name"]
-            session["user_email"] = user["email"]
+        if user and check_password_hash(user.password, password):
+            session["user_id"] = user.id
+            session["user_name"] = user.name
+            session["user_email"] = user.email
             flash("Login successful!", "success")
             return redirect(url_for("analyze_page"))
         else:
@@ -199,240 +78,272 @@ def login():
 def logout():
     session.clear()
     flash("You have been logged out.", "info")
-    return redirect(url_for("login"))
+    return redirect(url_for("index"))
 
-@app.route("/analyze", methods=["POST"])
+@app.route("/analyze_page")
+def analyze_page():
+    if "user_id" not in session:
+        return redirect(url_for('login'))
+    return render_template("index.html")
+
+def save_history(user_id, job_role, result):
+    """Saves the analysis result to the database."""
+    new_analysis = ResumeAnalysis(user_id=user_id, job_role=job_role, result=result)
+    db.session.add(new_analysis)
+    db.session.commit()
+
+@app.route("/analyze", methods=["GET", "POST"])
 def analyze():
+    if request.method == 'GET':
+        return redirect(url_for('analyze_page'))
+
     if "user_id" not in session:
         flash("Please log in first.", "warning")
         return redirect(url_for("login"))
 
     job_role = request.form.get("job_role")
     if not job_role:
-        flash("Please specify a job role.", "warning")
+        flash("Job role is required.", "warning")
         return redirect(url_for("analyze_page"))
 
-    # Get email address from form
     recipient_email = request.form.get("email")
 
     if "resume" not in request.files:
-        flash("No resume file selected.", "danger")
+        flash("Resume file not selected.", "danger")
         return redirect(url_for("analyze_page"))
 
     file = request.files["resume"]
     if not file or file.filename == "":
-        flash("No resume file selected.", "danger")
+        flash("Resume file not selected.", "danger")
         return redirect(url_for("analyze_page"))
 
     try:
         resume_text = extract_text(file)
+        if "Error" in resume_text:
+             flash(resume_text, "danger")
+             return redirect(url_for("analyze_page"))
+
         result = analyze_resume(resume_text, job_role)
         save_history(session["user_id"], job_role, result)
 
-        # Save latest to session for PDF/email
         session["latest_result"] = result
         session["latest_role"] = job_role
 
-        # If email was provided, send the report immediately
         if recipient_email:
             html = render_template("report.html", result=format_for_web(result), job_role=job_role, now=datetime.now())
             pdf = generate_pdf(html)
-            email_sent = send_email(recipient_email, f"Resume Report for {job_role}", "Find attached your analysis result.", attachment=pdf)
-
-            if email_sent:
-                flash("Analysis report sent to the provided email successfully!", "success")
+            if pdf:
+                email_sent = send_email(recipient_email, f"Resume Report for {job_role}", "Your analysis result is attached.", attachment=pdf)
+                if email_sent:
+                    flash("Analysis report has been sent to your email!", "success")
+                else:
+                    flash("Could not send email. Please try again later.", "danger")
             else:
-                flash("Failed to send email. Please try again later.", "danger")
+                flash("Could not generate PDF for email.", "danger")
 
         flash("Resume analysis completed successfully!", "success")
         return render_template("index.html", result=format_for_web(result), job_role=job_role)
     except Exception as e:
-        flash(f"Error analyzing resume: {str(e)}", "danger")
+        flash(f"An unexpected error occurred: {str(e)}", "danger")
         return redirect(url_for("analyze_page"))
 
 @app.route("/dashboard")
 def dashboard():
     if "user_id" not in session:
-        flash("Please log in first.", "warning")
         return redirect(url_for("login"))
+    history = ResumeAnalysis.query.filter_by(user_id=session["user_id"]).order_by(ResumeAnalysis.created_at.desc()).all()
+    return render_template("dashboard.html", name=session.get("user_name"), history=history)
 
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM analysis_history WHERE user_id = ? ORDER BY created_at DESC", (session["user_id"],))
-    history = cursor.fetchall()
-    conn.close()
-
-    return render_template("dashboard.html", name=session["user_name"], history=history)
-
-@app.route("/download-pdf")
+@app.route("/download_pdf")
 def download_pdf():
-    if "user_id" not in session:
-        flash("Please log in first.", "warning")
-        return redirect(url_for("login"))
-
-    if "latest_result" not in session:
+    if "user_id" not in session or "latest_result" not in session:
         flash("No analysis result available to download.", "warning")
         return redirect(url_for("dashboard"))
 
-    try:
-        html = render_template("report.html", result=format_for_web(session["latest_result"]), job_role=session["latest_role"], now=datetime.now())
-        pdf = generate_pdf(html)
+    html = render_template("report.html", result=format_for_web(session["latest_result"]), job_role=session["latest_role"], now=datetime.now())
+    pdf = generate_pdf(html)
+    if pdf:
         return send_file(pdf, as_attachment=True, download_name="Resume_Analysis.pdf", mimetype="application/pdf")
-    except Exception as e:
-        flash(f"Error generating PDF: {str(e)}", "danger")
+    else:
+        flash("Error generating PDF.", "danger")
         return redirect(url_for("dashboard"))
 
 @app.route("/email-result")
 def email_result():
-    if "user_id" not in session:
-        flash("Please log in first.", "warning")
-        return redirect(url_for("login"))
-
-    if "latest_result" not in session:
-        flash("No analysis result available to email.", "warning")
+    """Emails the most recent analysis result from the session."""
+    if "user_id" not in session or "latest_result" not in session:
+        flash("No recent analysis available to email.", "warning")
         return redirect(url_for("dashboard"))
 
     try:
         html = render_template("report.html", result=format_for_web(session["latest_result"]), job_role=session["latest_role"], now=datetime.now())
         pdf = generate_pdf(html)
-        email_sent = send_email(session["user_email"], f"Resume Report for {session['latest_role']}", "Find attached your analysis result.", attachment=pdf)
-
-        if email_sent:
-            flash("Analysis report sent to your email successfully!", "success")
+        if pdf and send_email(session["user_email"], f"Resume Report for {session['latest_role']}", "Find your analysis attached.", attachment=pdf):
+            flash("Analysis report sent to your email!", "success")
         else:
-            flash("Failed to send email. Please try again later.", "danger")
-
-        return redirect(url_for("dashboard"))
+            flash("Failed to send email.", "danger")
     except Exception as e:
         flash(f"Error sending email: {str(e)}", "danger")
-        return redirect(url_for("dashboard"))
+
+    return redirect(url_for("dashboard"))
+
 
 @app.route("/email-analysis/<int:analysis_id>")
 def email_analysis(analysis_id):
+    """Emails a specific analysis from the user's history."""
     if "user_id" not in session:
-        flash("Please log in first.", "warning")
         return redirect(url_for("login"))
 
-    # Get the specific analysis
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM analysis_history WHERE id = ? AND user_id = ?", 
-                  (analysis_id, session["user_id"]))
-    analysis = cursor.fetchone()
-    conn.close()
-
-    if not analysis:
-        flash("Analysis not found or you don't have permission to access it.", "danger")
+    analysis = db.session.get(ResumeAnalysis, analysis_id)
+    if not analysis or analysis.user_id != session["user_id"]:
+        flash("Analysis not found or you don't have permission.", "danger")
         return redirect(url_for("dashboard"))
 
     try:
-        html = render_template("report.html", 
-                              result=format_for_web(analysis["result"]), 
-                              job_role=analysis["job_role"], 
-                              now=datetime.now())
+        html = render_template("report.html", result=format_for_web(analysis.result), job_role=analysis.job_role, now=datetime.now())
         pdf = generate_pdf(html)
-        email_sent = send_email(session["user_email"], 
-                               f"Resume Report for {analysis['job_role']}", 
-                               "Find attached your analysis result.", 
-                               attachment=pdf)
-
-        if email_sent:
-            flash("Analysis report sent to your email successfully!", "success")
+        if pdf and send_email(session["user_email"], f"Resume Report for {analysis.job_role}", "Find your analysis attached.", attachment=pdf):
+            flash("Analysis report sent to your email!", "success")
         else:
-            flash("Failed to send email. Please try again later.", "danger")
-
-        return redirect(url_for("dashboard"))
+            flash("Failed to send email.", "danger")
     except Exception as e:
         flash(f"Error sending email: {str(e)}", "danger")
-        return redirect(url_for("dashboard"))
 
-@app.route("/analyze-page")
-def analyze_page():
-    if "user_id" not in session:
-        flash("Please log in first.", "warning")
-        return redirect(url_for("login"))
-    return render_template("index.html")
+    return redirect(url_for("dashboard"))
 
 @app.route("/build-resume", methods=["GET", "POST"])
 def build_resume():
     if "user_id" not in session:
-        flash("Please log in first.", "warning")
         return redirect(url_for("login"))
-    
-    if request.method == "GET":
-        return render_template("build_resume.html")
-    
+
     if request.method == "POST":
-        # Get form data
-        resume_data = {
-            'name': request.form.get('name', ''),
-            'email': request.form.get('email', ''),
-            'phone': request.form.get('phone', ''),
-            'job_role': request.form.get('job_role', ''),
-            'skills': request.form.get('skills', '').split(',') if request.form.get('skills') else [],
-            'education': request.form.get('education', ''),
-            'experience': request.form.get('experience', ''),
-            'certifications': request.form.get('certifications', ''),
-            'achievements': request.form.get('achievements', '')
+        session['generated_resume'] = {
+            'name': request.form.get('name'),
+            'email': request.form.get('email'),
+            'phone': request.form.get('phone'),
+            'job_role': request.form.get('job_role'),
+            'skills': [skill.strip() for skill in request.form.get('skills', '').split(',')],
+            'education': request.form.get('education'),
+            'experience': request.form.get('experience'),
+            'certifications': request.form.get('certifications'),
+            'achievements': request.form.get('achievements')
         }
+        return render_template("resume_result.html", resume_data=session['generated_resume'])
+
+    return render_template("build_resume.html")
+
+@app.route("/ai-resume-builder", methods=["GET", "POST"])
+def ai_resume_builder():
+    if "user_id" not in session:
+        return redirect(url_for("login"))
+
+    if request.method == "POST":
+        user_input = {k: v for k, v in request.form.items()}
         
-        # Clean up skills list
-        resume_data['skills'] = [skill.strip() for skill in resume_data['skills'] if skill.strip()]
+        # Check karein ki experience aur education me sufficient details hain ya nahi
+        # Hum 50 characters ka threshold rakhte hain
+        if len(user_input.get('experience', '')) < 50 or len(user_input.get('education', '')) < 20:
+            flash("For a better result, please provide more specific details.", "info")
+            # User ko detailed form par redirect karein
+            return render_template("ai_builder_details.html", user_input=user_input)
         
-        # Store in session for PDF generation
-        session['generated_resume'] = resume_data
-        
-        return render_template("resume_result.html", resume_data=resume_data)
+        # Agar details sufficient hain, to direct resume generate karein
+        try:
+            ai_resume = generate_ai_resume(user_input)
+            session['generated_resume'] = ai_resume
+            flash("Your professional resume has been generated by AI!", "success")
+            return render_template("resume_result.html", resume_data=ai_resume, ai_generated=True)
+        except Exception as e:
+            flash(f"Error generating AI resume: {str(e)}", "danger")
+            return redirect(url_for("ai_resume_builder"))
+
+    return render_template("ai_resume_builder.html")
+
+@app.route("/ai-generate-detailed", methods=["POST"])
+def ai_generate_detailed():
+    if "user_id" not in session:
+        return redirect(url_for("login"))
+
+    # Detailed form se saara data collect karein
+    user_input = {
+        'name': request.form.get('name'),
+        'email': request.form.get('email'),
+        'phone': request.form.get('phone'),
+        'job_role': request.form.get('job_role'),
+        'skills': request.form.get('skills'),
+        'experience': [],
+        'education': []
+    }
+
+    # Dynamic experience entries ko parse karein
+    exp_index = 0
+    while f'exp-title-{exp_index}' in request.form:
+        achievements = request.form.get(f'exp-achievements-{exp_index}', '').strip().split('\n')
+        user_input['experience'].append({
+            'title': request.form.get(f'exp-title-{exp_index}'),
+            'company': request.form.get(f'exp-company-{exp_index}'),
+            'dates': request.form.get(f'exp-dates-{exp_index}'),
+            'achievements': [ach.strip() for ach in achievements if ach.strip()]
+        })
+        exp_index += 1
+
+    # Dynamic education entries ko parse karein
+    edu_index = 0
+    while f'edu-degree-{edu_index}' in request.form:
+        user_input['education'].append({
+            'degree': request.form.get(f'edu-degree-{edu_index}'),
+            'institution': request.form.get(f'edu-institution-{edu_index}'),
+            'year': request.form.get(f'edu-year-{edu_index}')
+        })
+        edu_index += 1
+    
+    # Ab is structured data se resume generate karein
+    try:
+        ai_resume = generate_ai_resume(user_input)
+        session['generated_resume'] = ai_resume
+        flash("Your professional resume has been generated by AI with your detailed input!", "success")
+        return render_template("resume_result.html", resume_data=ai_resume, ai_generated=True)
+    except Exception as e:
+        flash(f"Error generating detailed AI resume: {str(e)}", "danger")
+        return redirect(url_for("ai_resume_builder"))
 
 @app.route("/download-resume-pdf")
 def download_resume_pdf():
-    if "user_id" not in session:
-        flash("Please log in first.", "warning")
-        return redirect(url_for("login"))
-    
-    if "generated_resume" not in session:
+    if "user_id" not in session or "generated_resume" not in session:
         flash("No resume data available to download.", "warning")
         return redirect(url_for("build_resume"))
-    
+
+    resume_data = session.get("generated_resume")
     try:
-        from weasyprint import HTML, CSS
-        from weasyprint.text.fonts import FontConfiguration
+        # HTML template render karein
+        html_string = render_template("resume_pdf.html", resume_data=resume_data)
         
-        # Generate HTML for PDF
-        html_content = render_template("resume_pdf.html", resume_data=session["generated_resume"])
+        # Hamare universal generate_pdf function ka istemal karein
+        pdf_file = generate_pdf(html_string)
         
-        # Create PDF
-        font_config = FontConfiguration()
-        html = HTML(string=html_content)
-        css = CSS(string="""
-            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
-            body { font-family: 'Inter', sans-serif; margin: 0; padding: 20px; }
-            .resume-container { max-width: 800px; margin: 0 auto; }
-            .header { background: linear-gradient(135deg, #6366f1, #8b5cf6); color: white; padding: 2rem; border-radius: 16px; margin-bottom: 2rem; }
-            .section { background: white; padding: 1.5rem; margin-bottom: 1rem; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
-            .section h3 { color: #6366f1; font-weight: 600; margin-bottom: 1rem; }
-            .skills-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 0.5rem; }
-            .skill-tag { background: #f0f9ff; color: #0369a1; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.875rem; text-align: center; }
-        """, font_config=font_config)
-        
-        pdf = html.write_pdf(stylesheets=[css])
-        
-        pdf_io = io.BytesIO(pdf)
-        pdf_io.seek(0)
-        
-        return send_file(
-            pdf_io,
-            as_attachment=True,
-            download_name=f"{session['generated_resume'].get('name', 'Resume').replace(' ', '_')}_Resume.pdf",
-            mimetype="application/pdf"
-        )
-        
-    except ImportError:
-        flash("WeasyPrint is not installed. Please install it to generate PDFs.", "danger")
-        return redirect(url_for("build_resume"))
+        if pdf_file:
+            return send_file(
+                pdf_file,
+                as_attachment=True,
+                download_name=f"{resume_data.get('name', 'Resume').replace(' ', '_')}_Resume.pdf",
+                mimetype="application/pdf"
+            )
+        else:
+            flash("Error generating PDF.", "danger")
+            return redirect(url_for("build_resume"))
+            
     except Exception as e:
-        flash(f"Error generating PDF: {str(e)}", "danger")
+        flash(f"An unexpected error occurred while generating PDF: {str(e)}", "danger")
         return redirect(url_for("build_resume"))
 
 if __name__ == "__main__":
+    # Ensure the instance folder exists
+    try:
+        os.makedirs(app.instance_path)
+    except OSError:
+        pass # Folder already exists
+
+    with app.app_context():
+        db.create_all()
+
     app.run(host="0.0.0.0", port=5000, debug=True)

@@ -1,138 +1,102 @@
+{% extends "layout.html" %}
+{% block title %}Your Generated Resume{% endblock %}
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Your Resume - Resume Analyzer</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-</head>
-<body>
-    <nav class="navbar">
-        <div class="container">
-            <div class="nav-container">
-                <a class="navbar-brand" href="{{ url_for('index') }}">
-                    <i class="fas fa-brain"></i>
-                    Resume Analyzer
-                </a>
-                <button class="nav-toggle" onclick="toggleNav()">
-                    <i class="fas fa-bars"></i>
-                </button>
-                <ul class="nav-menu" id="navMenu">
-                    <li><a class="nav-link" href="{{ url_for('index') }}">Analyze</a></li>
-                    <li><a class="nav-link" href="{{ url_for('build_resume') }}">Build Resume</a></li>
-                    <li><a class="nav-link" href="{{ url_for('dashboard') }}">Dashboard</a></li>
-                    <li><a class="nav-link" href="{{ url_for('logout') }}">Logout</a></li>
-                </ul>
-            </div>
-        </div>
-    </nav>
+{% block content %}
+<div class="page-header">
+    <h1>Your Generated Resume</h1>
+    <p>
+        {% if ai_generated %}
+            Our AI has crafted this professional resume for you.
+        {% else %}
+            Here is the resume you built.
+        {% endif %}
+        You can now download it as a PDF.
+    </p>
+</div>
 
-    <div class="container" style="padding-top: 2rem;">
-        <div class="text-center mb-4">
-            <h2 style="color: var(--primary-color); margin-bottom: 1rem;">Your Professional Resume</h2>
-            <div class="d-flex gap-3 justify-center">
-                <a href="{{ url_for('download_resume_pdf') }}" class="btn btn-primary">
-                    <i class="fas fa-file-pdf"></i>
-                    Download as PDF
-                </a>
-                <a href="{{ url_for('build_resume') }}" class="btn btn-outline">
-                    <i class="fas fa-edit"></i>
-                    Edit Resume
-                </a>
-            </div>
-        </div>
-
-        <!-- Resume Preview -->
-        <div class="card" style="max-width: 900px; margin: 0 auto;">
-            <div class="resume-container" style="padding: 2rem;">
-                <!-- Header Section -->
-                <div class="resume-header" style="background: linear-gradient(135deg, var(--primary-color), #8b5cf6); color: white; padding: 2rem; border-radius: var(--radius-lg); margin-bottom: 2rem; text-align: center;">
-                    <h1 style="font-size: 2.5rem; font-weight: 800; margin-bottom: 0.5rem;">{{ resume_data.name }}</h1>
-                    <p style="font-size: 1.25rem; margin-bottom: 1rem; opacity: 0.9;">{{ resume_data.job_role }}</p>
-                    <div style="display: flex; justify-content: center; gap: 2rem; flex-wrap: wrap;">
-                        <div style="display: flex; align-items: center; gap: 0.5rem;">
-                            <i class="fas fa-envelope"></i>
-                            <span>{{ resume_data.email }}</span>
-                        </div>
-                        <div style="display: flex; align-items: center; gap: 0.5rem;">
-                            <i class="fas fa-phone"></i>
-                            <span>{{ resume_data.phone }}</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Skills Section -->
-                {% if resume_data.skills %}
-                <div class="resume-section" style="background: var(--surface); padding: 1.5rem; border-radius: var(--radius-lg); margin-bottom: 1.5rem;">
-                    <h3 style="color: var(--primary-color); font-weight: 600; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
-                        <i class="fas fa-code"></i>
-                        Technical Skills
-                    </h3>
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 0.5rem;">
-                        {% for skill in resume_data.skills %}
-                        <div style="background: rgba(99, 102, 241, 0.1); color: var(--primary-color); padding: 0.5rem 1rem; border-radius: 9999px; text-align: center; font-weight: 500; font-size: 0.875rem;">
-                            {{ skill }}
-                        </div>
-                        {% endfor %}
-                    </div>
-                </div>
-                {% endif %}
-
-                <!-- Experience Section -->
-                {% if resume_data.experience %}
-                <div class="resume-section" style="background: var(--background); padding: 1.5rem; border-radius: var(--radius-lg); margin-bottom: 1.5rem; box-shadow: var(--shadow-sm);">
-                    <h3 style="color: var(--primary-color); font-weight: 600; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
-                        <i class="fas fa-briefcase"></i>
-                        Work Experience
-                    </h3>
-                    <div style="line-height: 1.7; white-space: pre-line;">{{ resume_data.experience }}</div>
-                </div>
-                {% endif %}
-
-                <!-- Education Section -->
-                {% if resume_data.education %}
-                <div class="resume-section" style="background: var(--background); padding: 1.5rem; border-radius: var(--radius-lg); margin-bottom: 1.5rem; box-shadow: var(--shadow-sm);">
-                    <h3 style="color: var(--primary-color); font-weight: 600; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
-                        <i class="fas fa-graduation-cap"></i>
-                        Education
-                    </h3>
-                    <div style="line-height: 1.7; white-space: pre-line;">{{ resume_data.education }}</div>
-                </div>
-                {% endif %}
-
-                <!-- Certifications Section -->
-                {% if resume_data.certifications %}
-                <div class="resume-section" style="background: var(--background); padding: 1.5rem; border-radius: var(--radius-lg); margin-bottom: 1.5rem; box-shadow: var(--shadow-sm);">
-                    <h3 style="color: var(--primary-color); font-weight: 600; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
-                        <i class="fas fa-certificate"></i>
-                        Certifications
-                    </h3>
-                    <div style="line-height: 1.7; white-space: pre-line;">{{ resume_data.certifications }}</div>
-                </div>
-                {% endif %}
-
-                <!-- Achievements Section -->
-                {% if resume_data.achievements %}
-                <div class="resume-section" style="background: var(--background); padding: 1.5rem; border-radius: var(--radius-lg); margin-bottom: 1.5rem; box-shadow: var(--shadow-sm);">
-                    <h3 style="color: var(--primary-color); font-weight: 600; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
-                        <i class="fas fa-trophy"></i>
-                        Key Achievements
-                    </h3>
-                    <div style="line-height: 1.7; white-space: pre-line;">{{ resume_data.achievements }}</div>
-                </div>
-                {% endif %}
-            </div>
-        </div>
+<div class="card">
+    <!-- Resume Header -->
+    <div class="text-center mb-4">
+        <h2 style="color: var(--primary-color);">{{ resume_data.name }}</h2>
+        <p style="color: var(--text-secondary);">{{ resume_data.job_role }}</p>
+        <p style="color: var(--text-secondary);">
+            {{ resume_data.email }} | {{ resume_data.phone }}
+        </p>
     </div>
 
-    <script>
-        function toggleNav() {
-            const navMenu = document.getElementById('navMenu');
-            navMenu.classList.toggle('show');
-        }
-    </script>
-</body>
-</html>
+    <!-- Summary -->
+    <div class="resume-section">
+        <h3>Professional Summary</h3>
+        <p>{{ resume_data.summary }}</p>
+    </div>
+
+    <!-- Skills -->
+    <div class="resume-section">
+        <h3>Skills</h3>
+        {% if resume_data.skills is mapping %}
+            {% for category, skill_list in resume_data.skills.items() %}
+                <strong>{{ category }}:</strong>
+                <p>{{ skill_list | join(', ') }}</p>
+            {% endfor %}
+        {% else %}
+            <p>{{ resume_data.skills | join(', ') }}</p>
+        {% endif %}
+    </div>
+
+    <!-- Experience -->
+    <div class="resume-section">
+        <h3>Work Experience</h3>
+        {% for job in resume_data.experience %}
+            <div style="margin-bottom: 1rem;">
+                <h4>{{ job.title }} at {{ job.company }}</h4>
+                <em style="color: var(--text-secondary);">{{ job.dates }}</em>
+                <ul>
+                    {% for achievement in job.achievements %}
+                        <li>{{ achievement }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endfor %}
+    </div>
+
+    <!-- Education -->
+    <div class="resume-section">
+        <h3>Education</h3>
+        {% for edu in resume_data.education %}
+             <div style="margin-bottom: 1rem;">
+                <h4>{{ edu.degree }}</h4>
+                <p>{{ edu.institution }} - {{ edu.year }}</p>
+            </div>
+        {% endfor %}
+    </div>
+
+    <div class="text-center mt-4">
+        <a href="{{ url_for('download_resume_pdf') }}" class="btn btn-primary btn-lg">Download as PDF</a>
+    </div>
+</div>
+
+<style>
+    .resume-section {
+        margin-bottom: 2rem;
+        border-bottom: 1px solid var(--border-color);
+        padding-bottom: 1.5rem;
+    }
+    .resume-section:last-child {
+        border-bottom: none;
+    }
+    .resume-section h3 {
+        color: var(--primary-color);
+        margin-bottom: 1rem;
+    }
+    .resume-section h4 {
+        color: var(--text-primary);
+    }
+    .resume-section ul {
+        list-style-position: inside;
+        padding-left: 0;
+    }
+    .resume-section li {
+        margin-bottom: 0.5rem;
+    }
+</style>
+{% endblock %}

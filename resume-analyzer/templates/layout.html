@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Resume Analyzer{% endblock %}</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <!-- Loader Overlay -->
+    <div class="loader-overlay" id="loader">
+        <div class="spinner"></div>
+        <p class="loader-text" id="loader-text">Processing...</p>
+    </div>
+
+    <div class="main-layout">
+        {% if session.user_id %}
+        <aside class="sidebar">
+            <a href="{{ url_for('dashboard') }}" class="sidebar-header">
+                <i class="fas fa-brain"></i> Analyzer
+            </a>
+            <ul class="nav-menu">
+                <li><a href="{{ url_for('dashboard') }}" class="nav-link {% if request.endpoint == 'dashboard' %}active{% endif %}"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
+                <li><a href="{{ url_for('analyze_page') }}" class="nav-link {% if request.endpoint == 'analyze_page' %}active{% endif %}"><i class="fas fa-search"></i> Analyze</a></li>
+                <li><a href="{{ url_for('build_resume') }}" class="nav-link {% if request.endpoint == 'build_resume' %}active{% endif %}"><i class="fas fa-edit"></i> Build</a></li>
+                <li><a href="{{ url_for('ai_resume_builder') }}" class="nav-link {% if request.endpoint == 'ai_resume_builder' %}active{% endif %}"><i class="fas fa-robot"></i> AI Build</a></li>
+            </ul>
+            <div class="sidebar-footer">
+                 <a href="{{ url_for('logout') }}" class="nav-link"><i class="fas fa-sign-out-alt"></i> Logout</a>
+            </div>
+        </aside>
+        {% endif %}
+
+        <main class="main-content">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }}">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+
+    {% block scripts %}{% endblock %}
+</body>
+</html>

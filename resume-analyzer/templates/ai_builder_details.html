@@ -1,0 +1,114 @@
+{% extends "layout.html" %}
+{% block title %}Provide More Details - AI Builder{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Almost There!</h1>
+    <p>To create the best resume, please provide some more specific details about your experience and education.</p>
+</div>
+
+<div class="card">
+    <form method="POST" action="{{ url_for('ai_generate_detailed') }}">
+        <input type="hidden" name="name" value="{{ user_input.name }}">
+        <input type="hidden" name="email" value="{{ user_input.email }}">
+        <input type="hidden" name="phone" value="{{ user_input.phone }}">
+        <input type="hidden" name="job_role" value="{{ user_input.job_role }}">
+        <input type="hidden" name="skills" value="{{ user_input.skills }}">
+
+        <div class="form-section">
+            <h3><i class="fas fa-briefcase"></i> Work Experience</h3>
+            <div id="experience-container">
+                </div>
+            <button type="button" class="btn btn-outline btn-sm" onclick="addExperience()">+ Add Experience</button>
+        </div>
+
+        <div class="form-section">
+            <h3><i class="fas fa-graduation-cap"></i> Education</h3>
+            <div id="education-container">
+                </div>
+            <button type="button" class="btn btn-outline btn-sm" onclick="addEducation()">+ Add Education</button>
+        </div>
+
+        <div class="text-center mt-4">
+            <button type="submit" class="btn btn-primary btn-lg">Generate My Resume</button>
+        </div>
+    </form>
+</div>
+
+<style>
+    /* (Styles copied from build_resume.html for consistency) */
+    .form-section { border-bottom: 1px solid var(--border-color); padding-bottom: 1.5rem; margin-bottom: 1.5rem; }
+    .form-section:last-of-type { border-bottom: none; }
+    .form-section h3 { color: var(--primary-color); margin-bottom: 1.5rem; }
+    .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; }
+    .dynamic-entry { background: var(--background-dark); border: 1px solid var(--border-color); border-radius: 8px; padding: 1.5rem; margin-bottom: 1rem; position: relative; }
+    .remove-btn { position: absolute; top: 10px; right: 10px; background: none; border: none; color: var(--danger-color); cursor: pointer; font-size: 1.2rem; }
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    let experienceCount = 0;
+    let educationCount = 0;
+
+    function addExperience() {
+        const container = document.getElementById('experience-container');
+        const newEntry = document.createElement('div');
+        newEntry.className = 'dynamic-entry';
+        newEntry.innerHTML = `
+            <button type="button" class="remove-btn" onclick="this.parentElement.remove()">×</button>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label class="form-label">Job Title</label>
+                    <input type="text" name="exp-title-${experienceCount}" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Company</label>
+                    <input type="text" name="exp-company-${experienceCount}" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Dates (e.g., Jan 2022 - Present)</label>
+                    <input type="text" name="exp-dates-${experienceCount}" class="form-control">
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Achievements/Responsibilities (one per line)</label>
+                <textarea name="exp-achievements-${experienceCount}" class="form-textarea" rows="4" required></textarea>
+            </div>
+        `;
+        container.appendChild(newEntry);
+        experienceCount++;
+    }
+
+    function addEducation() {
+        const container = document.getElementById('education-container');
+        const newEntry = document.createElement('div');
+        newEntry.className = 'dynamic-entry';
+        newEntry.innerHTML = `
+            <button type="button" class="remove-btn" onclick="this.parentElement.remove()">×</button>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label class="form-label">Degree</label>
+                    <input type="text" name="edu-degree-${educationCount}" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Institution</label>
+                    <input type="text" name="edu-institution-${educationCount}" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Year of Graduation</label>
+                    <input type="text" name="edu-year-${educationCount}" class="form-control">
+                </div>
+            </div>
+        `;
+        container.appendChild(newEntry);
+        educationCount++;
+    }
+
+    // Add one entry for each section by default
+    document.addEventListener('DOMContentLoaded', () => {
+        addExperience();
+        addEducation();
+    });
+</script>
+{% endblock %}

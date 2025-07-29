@@ -1,211 +1,53 @@
+{% extends "layout.html" %}
+{% block title %}Analyze Resume{% endblock %}
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">    
-    <title>Resume Analyzer</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-</head>
-<body>
-    <div class="loading-overlay" id="loadingOverlay">
+{% block content %}
+<div class="page-header">
+    <h1>Analyze Resume</h1>
+    <p>Upload your resume and select a job role to get instant AI-powered feedback.</p>
+</div>
+
+<div class="card">
+    <form id="analyzeForm" method="POST" action="{{ url_for('analyze') }}" enctype="multipart/form-data">
+        <div class="form-group">
+            <label for="job_role" class="form-label">Target Job Role</label>
+            <input type="text" id="job_role" name="job_role" class="form-control" placeholder="e.g. Software Engineer" required>
+        </div>
+        <div class="form-group">
+            <label class="form-label">Upload Resume (PDF, DOCX)</label>
+            <input type="file" name="resume" class="form-control" accept=".pdf,.docx" required>
+        </div>
+        <div class="form-group">
+            <label for="email" class="form-label">Email for Report (Optional)</label>
+            <input type="email" id="email" name="email" class="form-control" placeholder="your.email@example.com" value="{{ session.get('user_email', '') }}">
+        </div>
         <div class="text-center">
-            <div class="loading-spinner"></div>
-            <h4 class="loading-text">Analyzing your resume...</h4>
-            <p class="loading-subtext">This may take a few moments</p>
+            <button type="submit" class="btn btn-primary btn-lg">Analyze My Resume</button>
         </div>
+    </form>
+</div>
+
+{% if result %}
+<div class="card mt-4">
+    <h3 class="text-center mb-4">Analysis for: {{ job_role }}</h3>
+    <div class="analysis-result">
+        {{ result | safe }}
     </div>
-    
-    <nav class="navbar">
-        <div class="container">
-            <div class="nav-container">
-                <a class="navbar-brand" href="{{ url_for('index') }}">
-                    <i class="fas fa-brain"></i>
-                    Resume Analyzer
-                </a>
-                <button class="nav-toggle" onclick="toggleNav()">
-                    <i class="fas fa-bars"></i>
-                </button>
-                <ul class="nav-menu" id="navMenu">
-                    <li><a class="nav-link active" href="{{ url_for('index') }}">Analyze</a></li>
-                    <li><a class="nav-link" href="{{ url_for('build_resume') }}">Build Resume</a></li>
-                    <li><a class="nav-link" href="{{ url_for('dashboard') }}">Dashboard</a></li>
-                    <li><a class="nav-link" href="{{ url_for('logout') }}">Logout</a></li>
-                </ul>
-            </div>
-        </div>
-    </nav>
-    
-    <div class="container">
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                    <div class="alert alert-{{ category }}">
-                        {{ message }}
-                        <button onclick="this.parentElement.remove()" style="float: right; background: none; border: none; font-size: 1.2rem; cursor: pointer;">&times;</button>
-                    </div>
-                {% endfor %}
-            {% endif %}
-        {% endwith %}
-        
-        <div class="header-section">
-            <div class="header-content">
-                <h1><i class="fas fa-brain"></i> Resume Analyzer</h1>
-                <p>Leverage AI to analyze your resume and get personalized feedback for your dream job</p>
-            </div>
-        </div>
-        
-        <div class="card">
-            <div class="card-body">
-                <h4 class="text-center mb-4">Submit Your Resume</h4>
-                <form method="POST" action="{{ url_for('analyze') }}" enctype="multipart/form-data">
-                    <div class="form-group">
-                        <label for="job_role" class="form-label">Target Job Role</label>
-                        <div class="input-group">
-                            <i class="fas fa-briefcase input-group-icon"></i>
-                            <input type="text" name="job_role" class="form-control" placeholder="e.g. Data Scientist, Software Engineer, Product Manager" required>
-                        </div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="email" class="form-label">Email for Report</label>
-                        <div class="input-group">
-                            <i class="fas fa-envelope input-group-icon"></i>
-                            <input type="email" name="email" class="form-control" placeholder="Where to send the analysis report (optional)" value="{{ session.get('user_email', '') }}">
-                        </div>
-                        <small style="color: var(--text-secondary); font-size: 0.875rem;">We'll send the analysis report to this email address</small>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label class="form-label">Upload Resume</label>
-                        <div class="file-upload-wrapper" id="fileUpload">
-                            <div class="upload-icon">
-                                <i class="fas fa-file-pdf"></i>
-                            </div>
-                            <h5>Drop your resume here or click to browse</h5>
-                            <p>Accepted format: PDF only</p>
-                            <input type="file" name="resume" class="custom-file-input" accept=".pdf" required>
-                        </div>
-                    </div>
-                    
-                    <div class="text-center">
-                        <button type="submit" class="btn btn-primary btn-lg">
-                            <i class="fas fa-magic"></i>
-                            Analyze My Resume
-                        </button>
-                    </div>
-                    
-                    
-                </form>
-            </div>
-        </div>
-
-        {% if result %}
-        <div class="card">
-            <div class="card-body">
-                <h4 class="text-center mb-4">
-                    Analysis Results for: <span style="color: var(--primary-color);">{{ job_role }}</span>
-                </h4>
-                <div class="analysis-result">
-                    {{ result | safe }}
-                </div>
-                <div class="text-center mt-4 d-flex gap-3 justify-center">
-                    <a href="/download-pdf" class="btn btn-success">
-                        <i class="fas fa-file-pdf"></i>
-                        Download PDF
-                    </a>
-                    <a href="/email-result" class="btn btn-outline">
-                        <i class="fas fa-envelope"></i>
-                        Email Analysis
-                    </a>
-                </div>
-            </div>
-        </div>
-        {% endif %}
-        
-        <div class="footer">
-            <p>© 2025 Resume Analyzer | Powered by Gemini AI</p>
-        </div>
+    <div class="text-center mt-4 d-flex gap-2 justify-center">
+        <a href="{{ url_for('download_pdf') }}" class="btn btn-primary">Download PDF</a>
+        <a href="{{ url_for('email_result') }}" class="btn btn-outline">Email To Me</a>
     </div>
+</div>
+{% endif %}
+{% endblock %}
 
-    <script>
-        // Mobile navigation toggle
-        function toggleNav() {
-            const navMenu = document.getElementById('navMenu');
-            navMenu.classList.toggle('show');
-        }
-
-        // File upload functionality
-        const fileUpload = document.getElementById('fileUpload');
-        const fileInput = fileUpload.querySelector('input[type="file"]');
-        
-        fileInput.addEventListener('change', function(e) {
-            if (e.target.files.length > 0) {
-                const iconEl = fileUpload.querySelector('.upload-icon i');
-                const titleEl = fileUpload.querySelector('h5');
-                
-                iconEl.className = 'fas fa-check-circle';
-                titleEl.textContent = e.target.files[0].name;
-                fileUpload.classList.add('success');
-            }
-        });
-
-        // Drag and drop functionality
-        fileUpload.addEventListener('dragover', function(e) {
-            e.preventDefault();
-            fileUpload.classList.add('dragover');
-        });
-
-        fileUpload.addEventListener('dragleave', function(e) {
-            e.preventDefault();
-            fileUpload.classList.remove('dragover');
-        });
-
-        fileUpload.addEventListener('drop', function(e) {
-            e.preventDefault();
-            fileUpload.classList.remove('dragover');
-            
-            const files = e.dataTransfer.files;
-            if (files.length > 0 && files[0].type === 'application/pdf') {
-                fileInput.files = files;
-                fileInput.dispatchEvent(new Event('change'));
-            }
-        });
-        
-        // Show loading overlay when form is submitted
-        document.querySelector('form').addEventListener('submit', function(e) {
-            const formData = new FormData(e.target);
-            const fileInput = formData.get('resume');
-            const jobRole = formData.get('job_role');
-            
-            // Validate required fields
-            if (!fileInput || !fileInput.name || !jobRole.trim()) {
-                return; // Let browser handle validation
-            }
-            
-            // Show loading overlay
-            document.getElementById('loadingOverlay').classList.add('active');
-            const submitBtn = document.querySelector('button[type="submit"]');
-            
-            if (submitBtn) {
-                submitBtn.disabled = true;
-                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Analyzing...';
-            }
-        });
-
-        // Hide loading overlay when page loads (in case of redirect back)
-        window.addEventListener('load', function() {
-            document.getElementById('loadingOverlay').classList.remove('active');
-        });
-
-        // Close alerts
-        document.addEventListener('click', function(e) {
-            if (e.target.classList.contains('alert-close')) {
-                e.target.closest('.alert').remove();
-            }
-        });
-    </script>
-</body>
-</html>
+{% block scripts %}
+<script>
+    document.getElementById('analyzeForm').addEventListener('submit', function() {
+        const loader = document.getElementById('loader');
+        const loaderText = document.getElementById('loader-text');
+        loaderText.textContent = 'Analyzing your resume... This may take a moment.';
+        loader.classList.add('active');
+    });
+</script>
+{% endblock %}

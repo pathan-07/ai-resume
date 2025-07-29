@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: resume-analyzer
+    env: python
+    plan: free
+    rootDir: resume-analyzer
+    buildCommand: "./render_build.sh"
+    startCommand: "gunicorn app:app"
+    envVars:
+      - key: SECRET_KEY
+        generateValue: true
+      - key: PYTHON_VERSION
+        value: 3.11.4
+      - key: SENDER_EMAIL
+        sync: false
+      - key: SENDER_PASSWORD
+        sync: false
+      - key: GOOGLE_API_KEY
+        sync: false

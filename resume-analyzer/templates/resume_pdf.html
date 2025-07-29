@@ -1,108 +1,12 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ resume_data.name }} - Resume</title>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
-        
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: 'Inter', sans-serif;
-            line-height: 1.6;
-            color: #1f2937;
-            margin: 0;
-            padding: 20px;
-        }
-        
-        .resume-container {
-            max-width: 800px;
-            margin: 0 auto;
-        }
-        
-        .header {
-            background: linear-gradient(135deg, #6366f1, #8b5cf6);
-            color: white;
-            padding: 2rem;
-            border-radius: 16px;
-            margin-bottom: 2rem;
-            text-align: center;
-        }
-        
-        .header h1 {
-            font-size: 2.5rem;
-            font-weight: 800;
-            margin-bottom: 0.5rem;
-        }
-        
-        .header .job-role {
-            font-size: 1.25rem;
-            margin-bottom: 1rem;
-            opacity: 0.9;
-        }
-        
-        .contact-info {
-            display: flex;
-            justify-content: center;
-            gap: 2rem;
-            flex-wrap: wrap;
-        }
-        
-        .contact-item {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-        
-        .section {
-            background: white;
-            padding: 1.5rem;
-            margin-bottom: 1rem;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-        }
-        
-        .section h3 {
-            color: #6366f1;
-            font-weight: 600;
-            margin-bottom: 1rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-        
-        .skills-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-            gap: 0.5rem;
-        }
-        
-        .skill-tag {
-            background: #f0f9ff;
-            color: #0369a1;
-            padding: 0.5rem 1rem;
-            border-radius: 9999px;
-            font-size: 0.875rem;
-            text-align: center;
-            font-weight: 500;
-        }
-        
-        .content {
-            line-height: 1.7;
-            white-space: pre-line;
-        }
-    </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='resume_pdf.css') }}">
 </head>
 <body>
     <div class="resume-container">
-        <!-- Header Section -->
         <div class="header">
             <h1>{{ resume_data.name }}</h1>
             <div class="job-role">{{ resume_data.job_role }}</div>
@@ -118,7 +22,13 @@
             </div>
         </div>
 
-        <!-- Skills Section -->
+        {% if resume_data.summary %}
+        <div class="section">
+            <h3>📝 Professional Summary</h3>
+            <div class="content">{{ resume_data.summary }}</div>
+        </div>
+        {% endif %}
+
         {% if resume_data.skills %}
         <div class="section">
             <h3>🔧 Technical Skills</h3>
@@ -130,35 +40,47 @@
         </div>
         {% endif %}
 
-        <!-- Experience Section -->
         {% if resume_data.experience %}
         <div class="section">
             <h3>💼 Work Experience</h3>
+            {% if resume_data.experience is string %}
             <div class="content">{{ resume_data.experience }}</div>
+            {% else %}
+                {% for job in resume_data.experience %}
+                <div style="margin-bottom: 1.5rem;">
+                    <h4>{{ job.title }} at {{ job.company }}</h4>
+                    <em>{{ job.dates }} | {{ job.location }}</em>
+                    <ul>
+                        {% for achievement in job.achievements %}
+                        <li>{{ achievement }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endfor %}
+            {% endif %}
         </div>
         {% endif %}
 
-        <!-- Education Section -->
         {% if resume_data.education %}
         <div class="section">
             <h3>🎓 Education</h3>
+             {% if resume_data.education is string %}
             <div class="content">{{ resume_data.education }}</div>
+            {% else %}
+                {% for edu in resume_data.education %}
+                <div>
+                    <h4>{{ edu.degree }}</h4>
+                    <p>{{ edu.institution }} | {{ edu.year }}</p>
+                </div>
+                {% endfor %}
+            {% endif %}
         </div>
         {% endif %}
 
-        <!-- Certifications Section -->
         {% if resume_data.certifications %}
         <div class="section">
             <h3>📜 Certifications</h3>
-            <div class="content">{{ resume_data.certifications }}</div>
-        </div>
-        {% endif %}
-
-        <!-- Achievements Section -->
-        {% if resume_data.achievements %}
-        <div class="section">
-            <h3>🏆 Key Achievements</h3>
-            <div class="content">{{ resume_data.achievements }}</div>
+            <div class="content">{{ resume_data.certifications | join(', ') }}</div>
         </div>
         {% endif %}
     </div>

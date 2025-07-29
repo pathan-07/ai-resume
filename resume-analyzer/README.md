@@ -8,6 +8,7 @@ A modern web application that uses AI to analyze resumes against job description
 
 - **AI-Powered Resume Analysis**: Uses Google's Gemini AI to provide professional HR-style feedback
 - **Skill Matching**: Automatically identifies matched and missing skills based on the selected job role
+- **AI Resume Builder**: Generate professional resumes using Google's Gemini AI model
 - **PDF Reports**: Generate and download detailed analysis reports
 - **Email Delivery**: Send analysis reports directly to your email
 - **User Authentication**: Secure signup and login system
@@ -52,10 +53,16 @@ A modern web application that uses AI to analyze resumes against job description
 5. Create a `.env` file in the project root with the following variables:
    ```
    GOOGLE_API_KEY=your_gemini_api_key
+   GOOGLE_AI_API_KEY=your_gemini_api_key
    SECRET_KEY=your_secure_random_string
    SENDER_EMAIL=your_email@gmail.com
    SENDER_PASSWORD=your_email_app_password
    ```
+
+   To get your Google Gemini API key:
+   - Go to [Google AI Studio](https://makersuite.google.com/app/apikey)
+   - Create a new API key
+   - Copy and paste it into your `.env` file as both GOOGLE_API_KEY and GOOGLE_AI_API_KEY
 
 6. Initialize the database:
    ```
