@@ -5,7 +5,7 @@ services:
     plan: free
     # The rootDir has been removed.
     buildCommand: "pip install -r resume-analyzer/requirements.txt"
-    startCommand: "gunicorn resume-analyzer.app:app"
+    startCommand: "gunicorn --bind 0.0.0.0:$PORT resume-analyzer.app:app"
     envVars:
       - key: SECRET_KEY
         generateValue: true
