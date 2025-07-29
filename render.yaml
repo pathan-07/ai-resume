@@ -4,14 +4,14 @@ services:
     env: python
     plan: free
     
-    # Per the docs, this is a common build command for Python
+    # Build command ab yahin define hai
     buildCommand: "pip install -r resume-analyzer/requirements.txt"
     
-    # This start command follows the format from the docs for your folder structure
+    # Sahi Start Command jo aapke folder structure ke liye hai
     startCommand: "gunicorn resume-analyzer.app:app"
     
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.4
       - key: SECRET_KEY
-        generateValue: true
+        generateValue: true # Render apne aap secure key bana lega
