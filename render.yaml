@@ -2,18 +2,19 @@ services:
   - type: web
     name: resume-analyzer
     env: python
-    plan: free
-    rootDir: resume-analyzer
-    buildCommand: "pip install -r requirements.txt"
-    startCommand: "gunicorn --bind 0.0.0.0:$PORT app:app"
+    plan: free # Free plan par database ke liye disk nahi milti
+    buildCommand: "./render_build.sh"
+    startCommand: "gunicorn resume-analyzer.app:app"
     envVars:
-      - key: SECRET_KEY
-        generateValue: true
       - key: PYTHON_VERSION
         value: 3.11.4
+      - key: DATABASE_URL # Isko Render Dashboard se manage karein
+        sync: false
+      - key: GOOGLE_API_KEY
+        sync: false
       - key: SENDER_EMAIL
         sync: false
       - key: SENDER_PASSWORD
         sync: false
-      - key: GOOGLE_API_KEY
-        sync: false
+      - key: SECRET_KEY
+        generateValue: true # Render se generate karwayein
