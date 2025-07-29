@@ -2,4 +2,4 @@
 # exit on error
 set -o errexit
 
-pip install -r resume-analyzer/requirements.txt
+pip install -r requirements.txt
