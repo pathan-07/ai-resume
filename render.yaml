@@ -3,9 +3,9 @@ services:
     name: resume-analyzer
     env: python
     plan: free
-    # The rootDir has been removed.
-    buildCommand: "pip install -r resume-analyzer/requirements.txt"
-    startCommand: "gunicorn --bind 0.0.0.0:$PORT resume-analyzer.app:app"
+    rootDir: resume-analyzer
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "gunicorn --bind 0.0.0.0:$PORT app:app"
     envVars:
       - key: SECRET_KEY
         generateValue: true
