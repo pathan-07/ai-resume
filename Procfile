@@ -1,1 +1,1 @@
-web: gunicorn --bind 0.0.0.0:$PORT resume-analyzer.app:app
+web: flask run --host=0.0.0.0 --port=$PORT
