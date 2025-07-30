@@ -16,7 +16,15 @@ app = Flask(__name__,
             template_folder='templates',
             static_folder='static')
 app.config['SECRET_KEY'] = os.getenv("SECRET_KEY", "a-very-secure-and-random-string-that-is-hard-to-guess")
-app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///{os.path.join(app.instance_path, 'resume_ai.db')}"
+
+# For Vercel deployment, use in-memory SQLite or external database
+if os.getenv("VERCEL"):
+    # Use in-memory database for Vercel (data won't persist between requests)
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
+else:
+    # Use file-based database for local development
+    app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///{os.path.join(app.instance_path, 'resume_ai.db')}"
+
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # Initialize extensions
@@ -339,11 +347,12 @@ def download_resume_pdf():
         return redirect(url_for("build_resume"))
 
 if __name__ == "__main__":
-    # Ensure the instance folder exists
-    try:
-        os.makedirs(app.instance_path)
-    except OSError:
-        pass # Folder already exists
+    # Ensure the instance folder exists (only for local development)
+    if not os.getenv("VERCEL"):
+        try:
+            os.makedirs(app.instance_path)
+        except OSError:
+            pass # Folder already exists
 
     with app.app_context():
         db.create_all()
@@ -353,3 +362,7 @@ if __name__ == "__main__":
     # Disable debug mode for production
     debug_mode = os.environ.get("FLASK_ENV") == "development"
     app.run(host="0.0.0.0", port=port, debug=debug_mode)
+else:
+    # For Vercel deployment, initialize the database when the module is imported
+    with app.app_context():
+        db.create_all()
