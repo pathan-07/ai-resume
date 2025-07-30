@@ -8,7 +8,7 @@ services:
     buildCommand: "pip install -r requirements.txt"
     
     # Start command - change to the correct directory and run with gunicorn
-    startCommand: "cd resume-analyzer/deploy && gunicorn --bind 0.0.0.0:$PORT app:app"
+    startCommand: "cd resume-analyzer/deploy/deploy && gunicorn --bind 0.0.0.0:$PORT app:app"
     
     envVars:
       - key: PYTHON_VERSION
