@@ -12,8 +12,15 @@
   ],
   "routes": [
     {
+      "src": "/static/(.*)",
+      "dest": "resume-analyzer/deploy/static/$1"
+    },
+    {
       "src": "/(.*)",
       "dest": "app.py"
     }
-  ]
+  ],
+  "env": {
+    "VERCEL": "1"
+  }
 }
