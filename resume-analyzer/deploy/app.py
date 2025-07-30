@@ -362,7 +362,9 @@ if __name__ == "__main__":
     # Disable debug mode for production
     debug_mode = os.environ.get("FLASK_ENV") == "development"
     app.run(host="0.0.0.0", port=port, debug=debug_mode)
-else:
-    # For Vercel deployment, initialize the database when the module is imported
+
+@app.route('/init-db')
+def init_db():
     with app.app_context():
         db.create_all()
+    return "Database initialized!"
