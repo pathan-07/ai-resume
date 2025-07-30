@@ -22,8 +22,8 @@ if os.getenv("VERCEL"):
     # Use in-memory database for Vercel (data won't persist between requests)
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
 else:
-    # Use file-based database for local development
-    app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///{os.path.join(app.instance_path, 'resume_ai.db')}"
+    # Use DATABASE_URL environment variable or fallback to local SQLite
+    app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv("DATABASE_URL", f"sqlite:///{os.path.join(app.instance_path, 'resume_ai.db')}")
 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
