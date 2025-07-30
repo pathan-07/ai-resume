@@ -3,13 +3,12 @@ services:
     name: resume-analyzer
     env: python
     plan: free
-    rootDir: resume-analyzer/deploy
     
     # Build command - install dependencies
-    buildCommand: "pip install -r ../../requirements.txt"
+    buildCommand: "pip install -r requirements.txt"
     
-    # Start command - use Flask directly since gunicorn path issues
-    startCommand: "python app.py"
+    # Start command - change to the correct directory and run with gunicorn
+    startCommand: "cd resume-analyzer/deploy && gunicorn --bind 0.0.0.0:$PORT app:app"
     
     envVars:
       - key: PYTHON_VERSION
@@ -18,3 +17,9 @@ services:
         generateValue: true
       - key: FLASK_ENV
         value: production
+      - key: GOOGLE_API_KEY
+        sync: false  # You'll need to set this manually in Render dashboard
+      - key: SENDER_EMAIL
+        sync: false  # You'll need to set this manually in Render dashboard
+      - key: SENDER_PASSWORD
+        sync: false  # You'll need to set this manually in Render dashboard

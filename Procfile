@@ -1,1 +1,1 @@
-web: cd resume-analyzer/deploy && gunicorn app:app --bind 0.0.0.0:$PORT
+web: cd resume-analyzer/deploy && gunicorn --bind 0.0.0.0:$PORT app:app
