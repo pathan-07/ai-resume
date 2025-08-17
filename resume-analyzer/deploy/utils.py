@@ -4,7 +4,7 @@ import re
 import smtplib
 from email.message import EmailMessage
 from email.utils import formataddr
-from xhtml2pdf import pisa  # WeasyPrint ki jagah iska istemal hoga
+import weasyprint
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -37,33 +37,17 @@ def send_email(receiver_email, subject, body, attachment=None):
         return False
 
 def generate_pdf(html_string):
-    """HTML se PDF generate karta hai using xhtml2pdf, handling local paths correctly."""
-    pdf_buffer = io.BytesIO()
-    
-    # Define a link callback to resolve local file paths
-    def link_callback(uri, rel):
-        # Use os.path.join to handle file paths correctly across operating systems
-        # The base path should be the 'static' folder in your project directory
-        static_path = os.path.join(os.path.dirname(__file__), 'static')
-        path = os.path.join(static_path, uri.replace("/", os.sep))
-
-        # Ensure the file exists
-        if not os.path.isfile(path):
-            # Fallback for other potential paths if needed, or return original uri
-            return uri
-        return path
-
+    """HTML se PDF generate karta hai using weasyprint."""
     try:
-        pisa_status = pisa.CreatePDF(
-            io.StringIO(html_string),  # source HTML
-            dest=pdf_buffer,           # destination PDF
-            link_callback=link_callback # custom function to resolve paths
-        )
+        # Create PDF from HTML string
+        pdf_buffer = io.BytesIO()
         
-        if pisa_status.err:
-            print('Error generating PDF:', pisa_status.err)
-            return None
-            
+        # WeasyPrint ke saath PDF generate karein
+        html_doc = weasyprint.HTML(string=html_string, base_url=os.path.dirname(__file__))
+        pdf_doc = html_doc.write_pdf()
+        
+        # PDF content ko buffer mein write karein
+        pdf_buffer.write(pdf_doc)
         pdf_buffer.seek(0)
         return pdf_buffer
         
