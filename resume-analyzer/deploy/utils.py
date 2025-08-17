@@ -4,8 +4,14 @@ import re
 import smtplib
 from email.message import EmailMessage
 from email.utils import formataddr
-import weasyprint
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import letter, A4
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
+from reportlab.lib.units import inch
 from dotenv import load_dotenv
+import re
+from html import unescape
 
 load_dotenv()
 
@@ -36,18 +42,61 @@ def send_email(receiver_email, subject, body, attachment=None):
         print(f"Error sending email: {e}")
         return False
 
+def clean_html_for_pdf(html_string):
+    """HTML content ko clean text mein convert karta hai PDF ke liye."""
+    # Remove HTML tags
+    clean_text = re.sub('<[^<]+?>', '', html_string)
+    # Decode HTML entities
+    clean_text = unescape(clean_text)
+    # Clean up extra whitespace
+    clean_text = re.sub(r'\n\s*\n', '\n\n', clean_text)
+    clean_text = re.sub(r' +', ' ', clean_text)
+    return clean_text.strip()
+
 def generate_pdf(html_string):
-    """HTML se PDF generate karta hai using weasyprint."""
+    """HTML se PDF generate karta hai using reportlab."""
     try:
-        # Create PDF from HTML string
         pdf_buffer = io.BytesIO()
         
-        # WeasyPrint ke saath PDF generate karein
-        html_doc = weasyprint.HTML(string=html_string, base_url=os.path.dirname(__file__))
-        pdf_doc = html_doc.write_pdf()
+        # HTML content ko clean text mein convert karein
+        clean_text = clean_html_for_pdf(html_string)
         
-        # PDF content ko buffer mein write karein
-        pdf_buffer.write(pdf_doc)
+        # ReportLab ke saath PDF generate karein
+        doc = SimpleDocTemplate(pdf_buffer, pagesize=A4)
+        styles = getSampleStyleSheet()
+        story = []
+        
+        # Title style
+        title_style = ParagraphStyle(
+            'CustomTitle',
+            parent=styles['Heading1'],
+            fontSize=16,
+            spaceAfter=20,
+            textColor='#4f46e5'
+        )
+        
+        # Normal style
+        normal_style = ParagraphStyle(
+            'CustomNormal',
+            parent=styles['Normal'],
+            fontSize=10,
+            spaceAfter=12,
+            leftIndent=0,
+            rightIndent=0
+        )
+        
+        # Split content into paragraphs
+        paragraphs = clean_text.split('\n')
+        
+        for para in paragraphs:
+            if para.strip():
+                if 'Resume Analysis Report' in para:
+                    story.append(Paragraph(para.strip(), title_style))
+                else:
+                    story.append(Paragraph(para.strip(), normal_style))
+                story.append(Spacer(1, 6))
+        
+        doc.build(story)
         pdf_buffer.seek(0)
         return pdf_buffer
         
