@@ -53,55 +53,34 @@ def clean_html_for_pdf(html_string):
     clean_text = re.sub(r' +', ' ', clean_text)
     return clean_text.strip()
 
-def generate_pdf(html_string):
-    """HTML se PDF generate karta hai using reportlab."""
+def generate_pdf(html_content):
+    """Generates a PDF from HTML content using ReportLab."""
     try:
         pdf_buffer = io.BytesIO()
-        
-        # HTML content ko clean text mein convert karein
-        clean_text = clean_html_for_pdf(html_string)
-        
-        # ReportLab ke saath PDF generate karein
-        doc = SimpleDocTemplate(pdf_buffer, pagesize=A4)
+        doc = SimpleDocTemplate(pdf_buffer, pagesize=letter)
         styles = getSampleStyleSheet()
         story = []
-        
-        # Title style
-        title_style = ParagraphStyle(
-            'CustomTitle',
-            parent=styles['Heading1'],
-            fontSize=16,
-            spaceAfter=20,
-            textColor='#4f46e5'
-        )
-        
-        # Normal style
-        normal_style = ParagraphStyle(
-            'CustomNormal',
-            parent=styles['Normal'],
-            fontSize=10,
-            spaceAfter=12,
-            leftIndent=0,
-            rightIndent=0
-        )
-        
-        # Split content into paragraphs
+
+        # Remove HTML tags and convert to plain text
+        clean_text = re.sub('<.*?>', '', html_content)
+        clean_text = clean_text.replace('&nbsp;', ' ').replace('&lt;', '<').replace('&gt;', '>')
+
+        # Split into paragraphs
         paragraphs = clean_text.split('\n')
-        
+
         for para in paragraphs:
             if para.strip():
-                if 'Resume Analysis Report' in para:
-                    story.append(Paragraph(para.strip(), title_style))
+                if any(heading in para for heading in ['Resume Analysis', 'Job Role', 'Score', 'Skills']):
+                    story.append(Paragraph(para.strip(), styles['Heading2']))
                 else:
-                    story.append(Paragraph(para.strip(), normal_style))
-                story.append(Spacer(1, 6))
-        
+                    story.append(Paragraph(para.strip(), styles['Normal']))
+                story.append(Spacer(1, 0.2*inch))
+
         doc.build(story)
         pdf_buffer.seek(0)
         return pdf_buffer
-        
     except Exception as e:
-        print(f"An unexpected error occurred in generate_pdf: {e}")
+        print(f"Error generating PDF: {e}")
         return None
 
 def format_for_web(text):
