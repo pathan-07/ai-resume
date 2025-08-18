@@ -83,6 +83,53 @@ def generate_pdf(html_content):
         print(f"Error generating PDF: {e}")
         return None
 
+def extract_analysis_data(text):
+    """Extract structured data from analysis text for visualization."""
+    import re
+    
+    data = {
+        'score': 0,
+        'strengths': [],
+        'improvements': [],
+        'missing_skills': [],
+        'categories': {
+            'technical_skills': 0,
+            'experience': 0,
+            'education': 0,
+            'presentation': 0
+        }
+    }
+    
+    # Extract score
+    score_match = re.search(r'score.*?(\d+)', text, re.IGNORECASE)
+    if score_match:
+        data['score'] = int(score_match.group(1))
+    
+    # Extract sections
+    sections = re.split(r'\*\*(.*?)\*\*', text)
+    current_section = None
+    
+    for i, section in enumerate(sections):
+        if 'strengths' in section.lower():
+            current_section = 'strengths'
+        elif 'improvement' in section.lower():
+            current_section = 'improvements'
+        elif 'missing' in section.lower() or 'skills' in section.lower():
+            current_section = 'missing_skills'
+        elif current_section and i % 2 == 0:  # Content section
+            items = [item.strip() for item in re.split(r'[•\-\*\n]', section) if item.strip()]
+            if current_section in data:
+                data[current_section].extend(items[:5])  # Limit to 5 items
+    
+    # Calculate category scores based on content analysis
+    score_base = data['score']
+    data['categories']['technical_skills'] = min(100, score_base + (10 if 'technical' in text.lower() else -5))
+    data['categories']['experience'] = min(100, score_base + (5 if 'experience' in text.lower() else -10))
+    data['categories']['education'] = min(100, score_base + (0 if 'education' in text.lower() else -5))
+    data['categories']['presentation'] = min(100, score_base + (5 if len(data['strengths']) > 2 else -15))
+    
+    return data
+
 def format_for_web(text):
     # (Is function me koi badlav nahi hai)
     if not text:

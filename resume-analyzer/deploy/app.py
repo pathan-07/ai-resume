@@ -6,7 +6,7 @@ import io
 
 # Local Imports
 from models import db, User, ResumeAnalysis
-from utils import send_email, generate_pdf, format_for_web
+from utils import extract_text, generate_pdf, send_email, format_for_web, extract_analysis_data
 from resume_parser import extract_text
 from analysis import analyze_resume
 from ai_resume_generator import generate_ai_resume
@@ -152,6 +152,9 @@ def analyze():
                 flash("Could not generate PDF for email.", "danger")
 
         flash("Resume analysis completed successfully!", "success")
+        # Here you would pass the analysis data to the template for graphing
+        # For now, we'll just render the index.html as before.
+        # In a real implementation, you'd pass `result` or `extract_analysis_data(result)`
         return render_template("index.html", result=format_for_web(result), job_role=job_role)
     except Exception as e:
         flash(f"An unexpected error occurred: {str(e)}", "danger")
@@ -249,14 +252,14 @@ def ai_resume_builder():
 
     if request.method == "POST":
         user_input = {k: v for k, v in request.form.items()}
-        
+
         # Check karein ki experience aur education me sufficient details hain ya nahi
         # Hum 50 characters ka threshold rakhte hain
         if len(user_input.get('experience', '')) < 50 or len(user_input.get('education', '')) < 20:
             flash("For a better result, please provide more specific details.", "info")
             # User ko detailed form par redirect karein
             return render_template("ai_builder_details.html", user_input=user_input)
-        
+
         # Agar details sufficient hain, to direct resume generate karein
         try:
             ai_resume = generate_ai_resume(user_input)
@@ -306,7 +309,7 @@ def ai_generate_detailed():
             'year': request.form.get(f'edu-year-{edu_index}')
         })
         edu_index += 1
-    
+
     # Ab is structured data se resume generate karein
     try:
         ai_resume = generate_ai_resume(user_input)
@@ -327,10 +330,10 @@ def download_resume_pdf():
     try:
         # HTML template render karein
         html_string = render_template("resume_pdf.html", resume_data=resume_data)
-        
+
         # Hamare universal generate_pdf function ka istemal karein
         pdf_file = generate_pdf(html_string)
-        
+
         if pdf_file:
             return send_file(
                 pdf_file,
@@ -341,7 +344,7 @@ def download_resume_pdf():
         else:
             flash("Error generating PDF.", "danger")
             return redirect(url_for("build_resume"))
-            
+
     except Exception as e:
         flash(f"An unexpected error occurred while generating PDF: {str(e)}", "danger")
         return redirect(url_for("build_resume"))

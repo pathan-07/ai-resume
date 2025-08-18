@@ -30,9 +30,38 @@
 {% if result %}
 <div class="card mt-4">
     <h3 class="text-center mb-4">Analysis for: {{ job_role }}</h3>
-    <div class="analysis-result">
+    
+    <!-- Visual Analytics Section -->
+    {% if analysis_data %}
+    <div class="analytics-section">
+        <div class="charts-grid">
+            <!-- Overall Score Gauge -->
+            <div class="chart-container">
+                <h4><i class="fas fa-tachometer-alt"></i> Overall Score</h4>
+                <canvas id="scoreGauge"></canvas>
+                <div class="score-display">{{ analysis_data.score }}/100</div>
+            </div>
+
+            <!-- Category Breakdown -->
+            <div class="chart-container">
+                <h4><i class="fas fa-chart-radar"></i> Category Analysis</h4>
+                <canvas id="categoryChart"></canvas>
+            </div>
+
+            <!-- Strengths vs Improvements -->
+            <div class="chart-container full-width">
+                <h4><i class="fas fa-balance-scale"></i> Strengths vs Areas for Improvement</h4>
+                <canvas id="comparisonChart"></canvas>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Detailed Analysis -->
+    <div class="result-content">
         {{ result | safe }}
     </div>
+
     <div class="text-center mt-4 d-flex gap-2 justify-center">
         <a href="{{ url_for('download_pdf') }}" class="btn btn-primary">Download PDF</a>
         <a href="{{ url_for('email_result') }}" class="btn btn-outline">Email To Me</a>
@@ -49,5 +78,131 @@
         loaderText.textContent = 'Analyzing your resume... This may take a moment.';
         loader.classList.add('active');
     });
+
+    // Chart.js initialization if analysis_data is available
+    {% if analysis_data %}
+    document.addEventListener('DOMContentLoaded', function() {
+        // Overall Score Gauge Chart
+        const scoreGaugeCtx = document.getElementById('scoreGauge').getContext('2d');
+        const scoreGauge = new Chart(scoreGaugeCtx, {
+            type: 'gauge',
+            data: {
+                datasets: [{
+                    value: {{ analysis_data.score }},
+                    minValue: 0,
+                    maxValue: 100,
+                    gauge: {
+                        backgroundColor: 'rgba(0,0,0,0.1)',
+                        color: '{{ analysis_data.score_color }}' // Assuming score_color is available
+                    },
+                    label: 'Score'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                }
+            }
+        });
+
+        // Category Breakdown Chart (e.g., Doughnut or Bar chart)
+        const categoryChartCtx = document.getElementById('categoryChart').getContext('2d');
+        const categoryChart = new Chart(categoryChartCtx, {
+            type: 'doughnut', // or 'bar'
+            data: {
+                labels: {{ analysis_data.categories | tojson }}, // Assuming categories is a list of category names
+                datasets: [{
+                    label: 'Category Score',
+                    data: {{ analysis_data.category_scores | tojson }}, // Assuming category_scores is a list of scores
+                    backgroundColor: {{ analysis_data.category_colors | tojson }} // Assuming category_colors is a list of colors
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                if (context.raw !== null) {
+                                    label += context.raw + '%'; // Assuming scores are percentages
+                                }
+                                return label;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // Strengths vs Improvements Chart (e.g., Bar chart)
+        const comparisonChartCtx = document.getElementById('comparisonChart').getContext('2d');
+        const comparisonChart = new Chart(comparisonChartCtx, {
+            type: 'bar',
+            data: {
+                labels: ['Strengths', 'Areas for Improvement'],
+                datasets: [{
+                    label: 'Count',
+                    data: [{{ analysis_data.strengths_count }}, {{ analysis_data.improvements_count }}], // Assuming counts are available
+                    backgroundColor: [
+                        'rgba(75, 192, 192, 0.6)', // Green for strengths
+                        'rgba(255, 99, 132, 0.6)'  // Red for improvements
+                    ],
+                    borderColor: [
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(255, 99, 132, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                indexAxis: 'y', // Makes it a horizontal bar chart
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.dataset.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                if (context.raw !== null) {
+                                    label += context.raw;
+                                }
+                                return label;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    });
+    {% endif %}
 </script>
+
+<!-- Include Chart.js library -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.0/dist/chart.min.js"></script>
+<!-- Include chartjs-plugin-gauge if you want to use the gauge chart -->
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-gauge@0.3.0/dist/chartjs-plugin-gauge.min.js"></script>
+
 {% endblock %}

@@ -5,12 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Resume Analyzer{% endblock %}</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
     <!-- Animated Background Stars -->
     <div class="stars" id="stars"></div>
-    
+
     <!-- Loader Overlay -->
     <div class="loader-overlay" id="loader">
         <div class="spinner"></div>
@@ -48,13 +49,13 @@
     </div>
 
     {% block scripts %}{% endblock %}
-    
+
     <script>
         // Create animated background stars
         function createStars() {
             const starsContainer = document.getElementById('stars');
             if (!starsContainer) return;
-            
+
             for (let i = 0; i < 100; i++) {
                 const star = document.createElement('div');
                 star.className = 'star';
@@ -73,15 +74,15 @@
                     const size = Math.max(rect.width, rect.height);
                     const x = e.clientX - rect.left - size / 2;
                     const y = e.clientY - rect.top - size / 2;
-                    
+
                     const ripple = document.createElement('span');
                     ripple.style.width = ripple.style.height = size + 'px';
                     ripple.style.left = x + 'px';
                     ripple.style.top = y + 'px';
                     ripple.classList.add('ripple');
-                    
+
                     this.appendChild(ripple);
-                    
+
                     setTimeout(() => {
                         ripple.remove();
                     }, 600);
@@ -130,7 +131,7 @@
             addRippleEffect();
             addSmoothScroll();
             fadeInOnScroll();
-            
+
             // Add floating animation to cards
             document.querySelectorAll('.card, .history-card').forEach((card, index) => {
                 card.style.animationDelay = (index * 0.1) + 's';
