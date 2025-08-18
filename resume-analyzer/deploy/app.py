@@ -6,7 +6,7 @@ import io
 
 # Local Imports
 from models import db, User, ResumeAnalysis
-from utils import extract_text, generate_pdf, send_email, format_for_web, extract_analysis_data
+from utils import generate_pdf, send_email, format_for_web, extract_analysis_data
 from resume_parser import extract_text
 from analysis import analyze_resume
 from ai_resume_generator import generate_ai_resume

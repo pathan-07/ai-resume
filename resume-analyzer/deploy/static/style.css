@@ -220,6 +220,24 @@ body {
     left: 0;
 }
 
+.charts-container {
+    margin: 2rem 0;
+}
+
+.chart-card {
+    background: var(--surface-dark);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.chart-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px rgba(79, 70, 229, 0.2);
+}
+
 .nav-link:hover, .nav-link.active {
     color: var(--text-primary);
     background-color: rgba(129, 140, 248, 0.15);
